@@ -1,6 +1,6 @@
 {
   "short_name": "Wanderer",
-  "start_url": "https://geotheory.github.io/wanderer/",
+  "start_url": "https://maze-wanderer.github.io/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#444444",
