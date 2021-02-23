@@ -169,7 +169,7 @@ var p = { x: undefined, y: 0 },  // pointer position
     target = document.getElementById('game-area'),
     mouse_report = document.getElementById('mouse-report'),
     touch_report = document.getElementById('touch-report'),
-    sensitivity = 10;  // lower value = higher sensitivity
+    sensitivity = 20;  // lower value = higher sensitivity
 
 document.body.addEventListener('mousedown',function(e){ mouse_down = true;});
 document.body.addEventListener('mouseup',function(e){ mouse_down = false; end_gesture(); });
@@ -214,7 +214,7 @@ document.addEventListener('long-press', function(e) {
     }
 });
 
-document.addEventListener('click', function(e) { tap = true; });
+main_div.addEventListener('click', function(e) { tap = true; });
 
 
 function toggle_grid(){//}

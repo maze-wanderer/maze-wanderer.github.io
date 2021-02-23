@@ -1,7 +1,12 @@
 
 // Game setup and Phaser flow
 
-var w = document.getElementById('main').offsetWidth;
+main_div = document.getElementById('game-area');
+var w = main_div.offsetWidth;
+var win_height = window.innerHeight;
+var min_ratio = (1.25 * 18) / 40;
+if(win_height/w < min_ratio) w = win_height / min_ratio;
+
 var h = 1.25 * 16 * w / 40;
 var cellW = w / 40;
 var cellH = h / 16;

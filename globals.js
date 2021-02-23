@@ -32,6 +32,7 @@ var cookies,             // retrieve any pre-existing cookie with detail of curr
     keydown = 0,         // keypress timer
     grid = false,        // show/hide grid
     grid_array = [],     // grid array
+    main_div,            // main game panel object
     
     // monster variables
     big_monster,         // boolean of whether level has a big monster
