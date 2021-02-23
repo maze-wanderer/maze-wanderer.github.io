@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 4.128 15.405 H 95.795 V 109.984 H 4.128 V 15.405 Z" style="fill: none; stroke-width: 6px; stroke: rgb(255, 255, 255);"/>
+  <path d="M 4.128 15.405 H 49.981 V 61.421 H 4.128 V 15.405 Z" style="fill: none; stroke-width: 6px; stroke: rgb(255, 255, 255);"/>
+  <path d="M 49.981 15.405 H 95.834 V 61.421 H 49.981 V 15.405 Z" style="fill: none; stroke-width: 6px; stroke: rgb(255, 255, 255);"/>
+  <path d="M 4.128 61.421 H 49.981 V 107.437 H 4.128 V 61.421 Z" style="fill: none; stroke-width: 6px; stroke: rgb(255, 255, 255);"/>
+</svg>

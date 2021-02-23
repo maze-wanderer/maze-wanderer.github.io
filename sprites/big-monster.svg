@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <path d="M 32 0 L 96 0 L 112 16 L 112 112 L 96 128 L 32 128 L 16 112 L 16 75.25 L 16 16 L 32 0 Z" style="fill: rgb(253, 0, 118);"/>
+  <ellipse style="stroke-width: 5px; stroke: rgb(0, 0, 0); fill: rgb(255, 255, 255);" cx="42.165" cy="46.222" rx="23.165" ry="32.656"/>
+  <path style="stroke: rgb(0, 0, 0); stroke-width: 5px; fill: rgb(255, 255, 255);" d="M 38.741 88.98 H 89.038 A 6.568 6.568 0 0 1 95.606 95.548 V 111.703 A 6.568 6.568 0 0 1 89.038 118.271 H 38.741 A 6.568 6.568 0 0 1 32.173 111.703 V 95.548 A 6.568 6.568 0 0 1 38.741 88.98 Z" bx:shape="rect 32.173 88.98 63.433 29.291 6.568 6.568 6.568 6.568 1@ad44f94e"/>
+  <ellipse style="stroke-width: 5px; stroke: rgb(0, 0, 0); fill: rgb(255, 255, 255);" cx="88.835" cy="46.222" rx="18.43" ry="20.648"/>
+  <ellipse style="" cx="88.011" cy="47.22" rx="9.184" ry="9.184"/>
+  <ellipse style="" cx="43.112" cy="48.091" rx="9.184" ry="9.184"/>
+  <line style="stroke: rgb(0, 0, 0); stroke-width: 5px;" x1="34.719" y1="91.644" x2="47.043" y2="118.271"/>
+  <line style="stroke: rgb(0, 0, 0); stroke-width: 5px;" x1="46.043" y1="115.607" x2="58.367" y2="88.98" transform="matrix(-1, 0, 0, -1, 104.41, 204.587006)"/>
+  <line style="stroke: rgb(0, 0, 0); stroke-width: 5px;" x1="61.776" y1="89.986" x2="70.405" y2="118.271"/>
+  <line style="stroke: rgb(0, 0, 0); stroke-width: 5px;" x1="72.587" y1="118.271" x2="86.424" y2="87.322" transform="matrix(-1, 0, 0, -1, 159.011002, 205.593002)"/>
+  <line style="stroke: rgb(0, 0, 0); stroke-width: 5px;" x1="83.59" y1="90.216" x2="93.595" y2="113.949"/>
+</svg>

@@ -1,0 +1,84 @@
+
+:root {
+    --msgYoffset: 400px;
+  }
+  
+.alert {
+    margin: auto;
+    position: absolute;
+    display: none;
+    padding: 25px 5px 25px 5px !important;
+    width: 500px;
+    top: var(--msgYoffset);
+    left: 0;
+    right: 0;
+    border: solid yellow 1px;
+    background-color: #444;
+    color:white;
+    font-size: 1.2em;
+    text-align-last: center;
+    z-index: 100;
+}
+
+#pagetitle {
+    text-align: left; 
+    top:0; 
+    right:10px; 
+    position:absolute; 
+    color:yellow;
+    font-size:1.5em;
+}
+
+body {
+    background-color: #444;
+}
+
+span {
+    color: #ddd;
+    margin-bottom: 1px;
+}
+
+#gameLevel {
+    width: 150px !important;
+    margin-left: 0.3em;
+    margin-top: 2px;
+    margin-bottom: 1px;
+    height:30px;
+    color:white;
+}
+
+.level-option {
+    font-size: 0.8em !important;
+}
+
+/* @media (orientation: portrait) {
+    body {
+        -webkit-transform: rotate(-90deg);
+        -moz-transform: rotate(-90deg);
+        -o-transform: rotate(-90deg);
+        -ms-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+        @include transform-origin(0% 0%);
+        @include transform( rotate(90deg));
+        position: absolute;
+        left: 100%;
+    }
+} */
+
+h1, h2, h3, h4, h5, h6, .button, button, dd, dt, li, p {
+    margin-bottom: 3px !important;
+}
+
+.button, button {
+    padding: 2px 15px !important;
+    margin: 0 !important;
+    height: 3.1rem !important;
+}
+
+.container {
+    padding: 0 !important;
+}
+
+#sound {
+    cursor: pointer;
+}
