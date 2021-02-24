@@ -28,35 +28,39 @@
 	<script src="baby-monster.js"></script>
 </head>
 <body>
-	<div id="game-panel">
-		<div class="container">
-			<div id="row">
-				<div class="column-50">
-					<p>
-						<span><select id="gameLevel" style="width:80px;"></select></span> &ensp;
-						<span id="diamondsRemaining"></span> &ensp;
-						<span id="movesRemaining"></span> &ensp;
-						<span id="sound" onclick="toggle_sound()">🔇</span>
-						<span id="pagetitle"> <span style="color:skyblue;">&#60;&#60;&#60;</span>W·A·N·D·E·R·E·R<span style="color:magenta;"> >>> </span>
-							<a href="wanderer-credits.txt" style="color:#ccc; font-size:0.6em;" target="_blank">(credits)</a>
-						</span>
-					</p>
+	<div id="fullpage">
+		<div id="game-panel">
+			<div class="container">
+				<div id="row">
+					<div class="column-50">
+						<p>
+							<span><select id="gameLevel" style="width:80px;"></select></span> &ensp;
+							<span id="diamondsRemaining"></span> &ensp;
+							<span id="movesRemaining"></span> &ensp;
+							<span id="sound" onclick="toggle_sound()">🔇</span>
+							<span id="pagetitle"> <span style="color:skyblue;">&#60;&#60;&#60;</span>W·A·N·D·E·R·E·R<span style="color:magenta;"> >>> </span>
+								<!-- <a href="wanderer-credits.txt" style="color:#ccc; font-size:0.6em;" target="_blank">(credits)</a> -->
+								<a href="mouse-and-touch-gestures.html" style="color:#ccc; font-size:0.6em;" target="_blank">(credits)</a>
+							</span>
+						</p>
+					</div>
+				</div>
+
+				<div id="row">
+					<div class="column-50" id="main">
+						<div id="game-area"></div>
+					</div>
 				</div>
 			</div>
 
 			<div id="row">
-				<div class="column-50" id="main">
-					<div id="game-area"></div>
+				<div class="column-100">
+					<div class="alert" id="messenger" onclick="msg_fun()"></div>
 				</div>
-			</div>
-		</div>
-
-		<div id="row">
-			<div class="column-100">
-				<div class="alert" id="messenger" onclick="msg_fun()"></div>
 			</div>
 		</div>
 	</div>
+	<!-- </div> -->
 	<script src="game.js"></script>
 	<script src="dom-functions.js"></script>
 </body>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="//cdn.jsdelivr.net/npm/phaser@3.52.0/dist/phaser.js"></script>
+<script src="js/long-press-event.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/phaser@3.52.0/dist/phaser-arcade-physics.min.js"></script> -->
+</head>
+<body>
+<div id="fullpage">
+    <div id="game-area"></div>
+    <h1 style="left: 20px; top: 20px; position:absolute;">Mouse</h1>
+    <h1 id = 'mouse-report' style="left: 20px; top: 100px; position:absolute;">mouse report</h1>
+    <h1 style="left: 400px; top: 20px; position:absolute;">Touch</h1>
+    <h1 id = 'touch-report' style="left: 400px; top: 100px; position:absolute;">touch report</h1>
+    <h1 id = 'click-report' style="left: 20px; top: 200px; position:absolute;">clicks</h1>
+</div>
+
+<style>
+    #fullpage {
+        position: absolute; 
+        width: 100vw; 
+        height: 100vh; 
+        top: 0; 
+        left: 0; 
+        background-color: #444;
+    }
+</style>
+
+<script>
+
+var config = {
+    parent: 'game-area', type: Phaser.AUTO, width: 800, height: 600,
+    backgroundColor: '#aaa', scene: { create: create, update: update }
+}
+
+var player;
+var mouse_down;
+var k = 0;
+
+function create () {
+    var light_wall_graphics = this.add.graphics({ fillStyle: { color: 0xffff00 } });
+    player = new Phaser.Geom.Rectangle( 400, 300, 50, 50 );
+    player = light_wall_graphics.fillRectShape(player);
+}
+
+function update () {
+
+    if ( Math.abs(g.x) > 10 ) {
+        player.x += Math.sign(g.x) * 30;
+        g = {x: 0, y: 0 };  // reset
+    }
+
+    if ( Math.abs(g.y) > 10 ) {
+        player.y += Math.sign(g.y) * 30;
+        g = {x: 0, y: 0 };
+    }
+}
+
+var game = new Phaser.Game(config, 'game-area');
+
+var p = { x: 0, y: 0 },
+    g = { x: 0, y: 0 },
+    mouse_down = false,
+    target = document.getElementById('game-area'),
+    mouse_report = document.getElementById('mouse-report'),
+    touch_report = document.getElementById('touch-report');
+
+document.body.addEventListener('mousedown',function(e){ mouse_down = true; });
+document.body.addEventListener('mouseup',function(e){
+    mouse_down = false; 
+    mouse_count = 0;
+    end_gesture(); 
+});
+
+function end_gesture(){
+    p.x = undefined;
+    g = { x: 0, y: 0 };
+};
+
+function gesture(x, y){
+    if(p.x === undefined){ p = {"x": x, "y": y }; return; }
+    g.x += x - p.x;
+    g.y += y - p.y;
+    p.x = x;
+    p.y = y;
+};
+
+document.body.addEventListener('mousemove',function(e){
+    if(mouse_down){
+        gesture(e.x, e.y);
+        mouse_report.innerText = g.x + ' ' + g.y;
+    }
+});
+
+document.body.addEventListener('touchmove',function(e){
+    var touch = e.touches[0];
+    gesture(touch.pageX, touch.pageY);
+    touch_report.innerText = g.x + ' ' + g.y;
+});
+
+document.body.addEventListener('touchend', end_gesture);
+
+document.addEventListener('long-press', function(e) {
+  alert('long press')
+  mouse_down = false;
+});
+
+document.addEventListener('click', function(e) {
+    k++;
+    document.getElementById('click-report').innerText = k;
+});
+
+</script>
+</body>
+</html>

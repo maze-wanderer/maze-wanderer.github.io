@@ -75,9 +75,6 @@ function message(id, msg, fun = 'killed') {
 }
 
 
-// document.onclick = function(event) {
-//     console.log('click');
-// }
 
 
 document.onkeyup = function(event) {
@@ -214,7 +211,13 @@ document.addEventListener('long-press', function(e) {
     }
 });
 
-main_div.addEventListener('click', function(e) { tap = true; });
+// main_div.addEventListener('click', function(e) { tap = true; });
+
+main_div.onclick = function(e) { tap = true; };
+
+// document.onclick = function(event) {
+//     console.log('click');
+// }
 
 
 function toggle_grid(){//}

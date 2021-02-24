@@ -29,7 +29,13 @@
     font-size:1.5em;
 }
 
-body {
+/* div to ensure touchscreen below game area */
+#fullpage {
+    position: absolute; 
+    width: 100vw; 
+    height: 100vh; 
+    top: 0; 
+    left: 0; 
     background-color: #444;
 }
 
