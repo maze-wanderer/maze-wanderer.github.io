@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="shortcut icon" href="#">
 <script src="//cdn.jsdelivr.net/npm/phaser@3.52.0/dist/phaser.js"></script>
 <script src="js/long-press-event.min.js"></script>
 <!-- <script src="https://cdn.jsdelivr.net/npm/phaser@3.52.0/dist/phaser-arcade-physics.min.js"></script> -->
@@ -36,6 +37,7 @@ var config = {
 
 var player;
 var mouse_down;
+var gestured = false;
 var k = 0;
 
 function create () {
@@ -67,11 +69,12 @@ var p = { x: 0, y: 0 },
     touch_report = document.getElementById('touch-report');
 
 document.body.addEventListener('mousedown',function(e){ mouse_down = true; });
-document.body.addEventListener('mouseup',function(e){
-    mouse_down = false; 
-    mouse_count = 0;
-    end_gesture(); 
-});
+
+// document.body.addEventListener('mouseup',function(e){
+//     mouse_down = false; 
+//     mouse_count = 0;
+//     end_gesture(); 
+// });
 
 function end_gesture(){
     p.x = undefined;
@@ -79,11 +82,13 @@ function end_gesture(){
 };
 
 function gesture(x, y){
+    console.log('gesture');
     if(p.x === undefined){ p = {"x": x, "y": y }; return; }
     g.x += x - p.x;
     g.y += y - p.y;
     p.x = x;
     p.y = y;
+    gestured = true;
 };
 
 document.body.addEventListener('mousemove',function(e){
@@ -107,6 +112,9 @@ document.addEventListener('long-press', function(e) {
 });
 
 document.addEventListener('click', function(e) {
+    mouse_down = false; 
+    if(gestured) return;
+    end_gesture(); 
     k++;
     document.getElementById('click-report').innerText = k;
 });
