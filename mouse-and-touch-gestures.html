@@ -113,8 +113,8 @@ document.body.addEventListener('touchend', end_gesture);
 document.addEventListener('long-press', function(e) {
     lp++;
     document.getElementById('press-report').innerText = lp;
-    alert('long press')
     mouse_down = false;
+    gestured = true;
 });
 
 document.addEventListener('click', function(e) {

@@ -6,7 +6,7 @@ Go to the game: https://maze-wanderer.github.io/
 
 Wanderer is a UNIX-based game written by Steve Shipway in 1988 and contributed to by others [(see credits here)](wanderer-credits.txt).  While it has been ported to DOS, Linux, Android and Java, I've not found a version anywhere that is widely accessible on any device.  This version attempts to fill the gap.
 
-[This Android port](misc/wanderer.apk) by Andreas Grothe used to be available on Google Play a few years back.  It still works fine on my Android though I take no responsibility for the app.
+[This Android port](https://github.com/geotheory/wandroid.apk) by Andreas Grothe used to be available on Google Play a few years back.  It still works fine on my Android though I take no responsibility for the app.
 
 ### Technical notes
 
