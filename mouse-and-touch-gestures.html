@@ -24,6 +24,7 @@
         height: 100vh; 
         top: 0; 
         left: 0; 
+        z-index: 999999;
         background-color: #444;
     }
 </style>
@@ -77,8 +78,10 @@ document.body.addEventListener('mousedown',function(e){ mouse_down = true; });
 // });
 
 function end_gesture(){
+    console.log('end_gesture');
     p.x = undefined;
     g = { x: 0, y: 0 };
+    gestured = false;
 };
 
 function gesture(x, y){
@@ -113,8 +116,10 @@ document.addEventListener('long-press', function(e) {
 
 document.addEventListener('click', function(e) {
     mouse_down = false; 
-    if(gestured) return;
-    end_gesture(); 
+    if(gestured){
+        end_gesture(); 
+        return;
+    }
     k++;
     document.getElementById('click-report').innerText = k;
 });
