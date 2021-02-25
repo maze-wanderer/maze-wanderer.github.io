@@ -15,6 +15,7 @@
     <h1 style="left: 400px; top: 20px; position:absolute;">Touch</h1>
     <h1 id = 'touch-report' style="left: 400px; top: 100px; position:absolute;">touch report</h1>
     <h1 id = 'click-report' style="left: 20px; top: 200px; position:absolute;">clicks</h1>
+    <h1 id = 'press-report' style="left: 400px; top: 200px; position:absolute;">long press</h1>
 </div>
 
 <style>
@@ -39,7 +40,7 @@ var config = {
 var player;
 var mouse_down;
 var gestured = false;
-var k = 0;
+var k = 0, lp = 0;
 
 function create () {
     var light_wall_graphics = this.add.graphics({ fillStyle: { color: 0xffff00 } });
@@ -110,8 +111,10 @@ document.body.addEventListener('touchmove',function(e){
 document.body.addEventListener('touchend', end_gesture);
 
 document.addEventListener('long-press', function(e) {
-  alert('long press')
-  mouse_down = false;
+    lp++;
+    document.getElementById('press-report').innerText = lp;
+    alert('long press')
+    mouse_down = false;
 });
 
 document.addEventListener('click', function(e) {
