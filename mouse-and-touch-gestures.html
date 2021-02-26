@@ -119,10 +119,10 @@ document.addEventListener('long-press', function(e) {
 
 document.addEventListener('click', function(e) {
     mouse_down = false; 
-    if(gestured){
-        end_gesture(); 
-        return;
-    }
+    // if(gestured){
+    //     end_gesture(); 
+    //     return;
+    // }
     k++;
     document.getElementById('click-report').innerText = k;
 });
