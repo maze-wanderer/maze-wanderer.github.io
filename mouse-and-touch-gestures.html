@@ -46,6 +46,7 @@ function create () {
     var light_wall_graphics = this.add.graphics({ fillStyle: { color: 0xffff00 } });
     player = new Phaser.Geom.Rectangle( 400, 300, 50, 50 );
     player = light_wall_graphics.fillRectShape(player);
+    this.input.mouse.enabled = false;
 }
 
 function update () {
@@ -62,7 +63,7 @@ function update () {
 }
 
 var game = new Phaser.Game(config, 'game-area');
-game.input.mouse.enabled = false;
+
 
 var p = { x: 0, y: 0 },
     g = { x: 0, y: 0 },
