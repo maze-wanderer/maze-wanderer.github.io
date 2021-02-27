@@ -361,4 +361,4 @@ function update () {
 }
 
 var game = new Phaser.Game(config, 'game-area');
-
+game.input.enabled = false;
