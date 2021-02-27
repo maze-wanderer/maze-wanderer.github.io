@@ -10,7 +10,7 @@
 <body>
 <div id="fullpage">
     <div id="game-area"></div>
-    <h1 style="right: 20px; top: 20px; position:absolute;">v10</h1>
+    <h1 style="right: 20px; top: 20px; position:absolute;">v11</h1>
     <h1 style="left: 20px; top: 20px; position:absolute;">Mouse</h1>
     <h1 id = 'mouse-report' style="left: 20px; top: 100px; position:absolute;">mouse report</h1>
     <h1 style="left: 400px; top: 20px; position:absolute;">Touch</h1>
@@ -47,12 +47,10 @@ function create () {
     var light_wall_graphics = this.add.graphics({ fillStyle: { color: 0xffff00 } });
     player = new Phaser.Geom.Rectangle( 400, 300, 50, 50 );
     player = light_wall_graphics.fillRectShape(player);
-    // this.input.mouse.enabled = false;
-    this.input.enabled = false;
 }
 
 function update () {
-
+    this.input.enabled = false;
     if ( Math.abs(g.x) > 10 ) {
         player.x += Math.sign(g.x) * 30;
         g = {x: 0, y: 0 };  // reset
@@ -65,7 +63,7 @@ function update () {
 }
 
 var game = new Phaser.Game(config, 'game-area');
-
+game.input.enabled = false;
 
 var p = { x: 0, y: 0 },
     g = { x: 0, y: 0 },
