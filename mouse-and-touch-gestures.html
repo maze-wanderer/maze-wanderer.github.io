@@ -25,6 +25,11 @@
 
 <script>
 
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    var error_msg = ['msg: ' + msg, 'url: ' + url, 'lineNo: ' + lineNo, 'columnNo: ' + columnNo, 'error: ' + error].join('\n');
+    window.alert(error_msg);
+}
+
 mouse_report = document.getElementById('report');
 
 const { tidy, mutate, arrange, desc } = Tidy;
