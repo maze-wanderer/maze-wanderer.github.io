@@ -117,7 +117,7 @@ function next_level() {
     level_num++;
     reset_level()
     saveCookie('current_level', level_num);
-    if(level_num > cookies.max_level) saveCookie('max_level', level_num)
+    if(level_num > level_max){ level_max = level_num; saveCookie('max_level', level_max); }
 }
 
 // cookies
@@ -132,7 +132,7 @@ function readCookie() {
     return cookie;
 }
 
-function saveCookie(c_name, c_value, exdays=30) {
+function saveCookie(c_name, c_value, exdays=10000) {
     var exdate=new Date();
     exdate.setDate(exdate.getDate() + exdays);
     document.cookie=encodeURIComponent(c_name) 
@@ -143,11 +143,13 @@ function saveCookie(c_name, c_value, exdays=30) {
 
 var cookies = readCookie();
 var level_max, level_num;
-if(cookies.max_level === undefined) level_max = 1;
+if(cookies.max_level === undefined){ level_max = 1; saveCookie('max_level', level_max); }
 else level_max = cookies.max_level;
 if(cookies.current_level === undefined) level_num = 1;
 else level_num = cookies.current_level;
 menu_level.value = String(level_num);
+if(cookies.sound !== undefined) toggle_sound(set_to = cookies.sound === 'true');
+
 
 // swipe for mobiles
 
@@ -247,8 +249,12 @@ function toggle_grid(){//}
     }
 }
 
-function toggle_sound(){
-    sound = !sound;
+function toggle_sound(set_to = undefined){
+    if(set_to === undefined){
+        sound = !sound;
+        saveCookie('sound', sound);
+    }
+    else sound = set_to;
     if(sound) document.getElementById('sound').innerText = '🔊';
     else document.getElementById('sound').innerText = '🔇';
 }

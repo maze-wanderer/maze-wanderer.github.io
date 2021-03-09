@@ -12,6 +12,7 @@ var cookies,             // retrieve any pre-existing cookie with detail of curr
     portal_out,          // {x,y} object of any teleport destination 
     sound = false,       // sounds boolean
     verbose = false,     // more reporting to console.log
+    debug = true,
 
     // game flow variables
     speed = 20,          // delay of moving objects (lower = faster)
@@ -49,3 +50,10 @@ var dists = {
 };
 
 var type_order = { "boulder": 1, "left arrow": 2, "right arrow": 3 ,'balloon': 4 };
+
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    if(debug){
+        var error_msg = ['msg: ' + msg, 'url: ' + url, 'lineNo: ' + lineNo, 'columnNo: ' + columnNo, 'error: ' + error].join('\n');
+        window.alert(error_msg);
+    }
+}
