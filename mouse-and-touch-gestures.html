@@ -1,59 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<link rel="shortcut icon" href="#">
+    <meta charset="utf-8">
+    <script src="js/d3-array.v2.min.js"></script>
+	<script src="js/tidy.min.js"></script>
+    <link rel="shortcut icon" href="#">
+    <style>
+        #fullpage {
+            position: absolute; 
+            width: 100vw; 
+            height: 100vh; 
+            top: 0; 
+            left: 0; 
+            z-index: 999;
+            /* background-color: #444; */
+        }
+    </style>
 </head>
 <body>
 <div id="fullpage">
     <div id="game-area"></div>
-    <h1 id = 'report' style="left: 20px; top: 100px; position:absolute;">mouse report</h1>
+    <h1 id = 'report' style="left: 20px; top: 100px; position:absolute;">x</h1>
 </div>
-
-<style>
-    #fullpage {
-        position: absolute; 
-        width: 100vw; 
-        height: 100vh; 
-        top: 0; 
-        left: 0; 
-        z-index: 999;
-        /* background-color: #444; */
-    }
-</style>
 
 <script>
 
-function readCookie() {
-    var cookie = {};
-    var cookie_array = document.cookie.split(';');
-    for(var i=0; i<cookie_array.length; i++) {
-        cookie_arg = cookie_array[i].split('=');
-        cookie[cookie_arg[0].trim()] = cookie_arg[1];
-    }
-    return cookie;
-}
+mouse_report = document.getElementById('report');
 
-function saveCookie(c_name, c_value, exdays=30) {
-    var exdate=new Date();
-    exdate.setDate(exdate.getDate() + exdays);
-    document.cookie=encodeURIComponent(c_name) 
-        + "=" + encodeURIComponent(c_value)
-        + (!exdays ? "" : "; expires="+exdate.toUTCString())
-        + "; path=/";
-}
+const { tidy, mutate, arrange, desc } = Tidy;
 
+var data = [
+  { str: 'a', value: 3 },
+  { str: 'b', value: 4 },
+  { str: 'c', value: 2 },
+  { str: 'tidy works', value: 1 },
+  { str: 'e', value: 5 },
+];
+mouse_report.innerText = data[0].str;
 
-var cookies = readCookie();
-console.log(cookies)
-var k = cookies.k;
-if(k === undefined) k = 0;
-else k = Number(k) + 1;
-mouse_report = document.getElementById('report'),
-mouse_report.innerText = k;
+data = tidy(data, arrange(['value']));
 
-
-saveCookie('k', k)
+mouse_report.innerText = data[0].str;
 
 </script>
 </body>
