@@ -32,7 +32,7 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 
 mouse_report = document.getElementById('report');
 
-const { tidy, mutate, arrange, desc } = window.Tidy;
+// const { tidy, mutate, arrange, desc } = window.Tidy;
 
 var data = [
   { str: 'a', value: 3 },
@@ -43,7 +43,7 @@ var data = [
 ];
 mouse_report.innerText = data[0].str;
 
-data = tidy(data, arrange(['value']));
+data = Tidy.tidy(data, Tidy.arrange(['value']));
 
 mouse_report.innerText = data[0].str;
 
