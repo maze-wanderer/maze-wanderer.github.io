@@ -43,7 +43,7 @@ var data = [
 ];
 mouse_report.innerText = data[0].str;
 
-data = Tidy.tidy(data, Tidy.arrange(['value']));
+data = window.Tidy.tidy(data, window.Tidy.arrange(['value']));
 
 mouse_report.innerText = data[0].str;
 
