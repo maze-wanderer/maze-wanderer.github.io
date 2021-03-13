@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <script src="js/d3-array.v2.min.js"></script>
-	<script src="js/tidy.min.js"></script>
+    <!-- <script src="js/d3-array.v2.min.js"></script> -->
+	<!-- <script src="js/tidy.min.js"></script> -->
     <link rel="shortcut icon" href="#">
     <style>
         #fullpage {
@@ -35,17 +35,20 @@ mouse_report = document.getElementById('report');
 // const { tidy, mutate, arrange, desc } = window.Tidy;
 
 var data = [
-  { str: 'a', value: 3 },
-  { str: 'b', value: 4 },
-  { str: 'c', value: 2 },
-  { str: 'tidy works', value: 1 },
-  { str: 'e', value: 5 },
+  { cat1: 'a', cat2: 'B', value: 1, name: '#3' },
+  { cat1: 'a', cat2: 'A', value: 2, name: '#2' },
+  { cat1: 'b', cat2: 'A', value: 2, name: '#4' },
+  { cat1: 'a', cat2: 'A', value: 1, name: 'tidy works' },
+  { cat1: 'b', cat2: 'B', value: 1, name: '#5' },
 ];
-mouse_report.innerText = data[0].str;
 
-data = window.Tidy.tidy(data, window.Tidy.arrange(['value']));
+mouse_report.innerText = data[0].name;
 
-mouse_report.innerText = data[0].str;
+// data = window.Tidy.tidy(data, window.Tidy.arrange(['cat','value']));
+
+data = data.sort((x, y) => x.cat1.localeCompare(y.cat1) || x.cat2.localeCompare(y.cat2) || x.value - y.value);
+
+mouse_report.innerText = data[0].name;
 
 </script>
 </body>
