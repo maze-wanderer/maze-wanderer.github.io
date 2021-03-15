@@ -202,7 +202,7 @@ function triggers(x1, y1, x2, y2, type = '') {
         return n;
     });
 
-    neighbours = tidy(neighbours, arrange(['ntype', 'dist', desc('y'), desc('x')]) );
+    neighbours = neighbours.sort((x, y) => x.ntype - y.ntype || x.dist - y.dist || y.dist - x.dist || y.y - x.y);
 
     for(var i=0; i<neighbours.length; i++) {
         var n = neighbours[i];

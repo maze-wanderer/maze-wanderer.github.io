@@ -12,7 +12,7 @@ var cookies,             // retrieve any pre-existing cookie with detail of curr
     portal_out,          // {x,y} object of any teleport destination 
     sound = false,       // sounds boolean
     verbose = false,     // more reporting to console.log
-    debug = true,
+    debug = false,
 
     // game flow variables
     speed = 20,          // delay of moving objects (lower = faster)

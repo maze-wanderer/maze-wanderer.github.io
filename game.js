@@ -47,9 +47,6 @@ var elements = {
 // general sleeper function
 const sleep = (milliseconds) => { return new Promise(resolve => setTimeout(resolve, milliseconds)) }  
 
-// tidy.jd tool for ordering object arrays by multiple variables
-const { tidy, mutate, arrange, desc } = Tidy;
-
 
 // reads in data and builds the level. Accepts level number and option to purge existing level
 
