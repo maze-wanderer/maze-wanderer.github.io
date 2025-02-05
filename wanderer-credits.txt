@@ -1,11 +1,15 @@
 # CREDITS
 
+This project thanks:
+
 - https://www.steveshipway.org/software/wanderer/f_wanderer.html
 - https://github.com/sshipway/wanderer
 - wikimedia.org for open source vector art
 - Phaser game engine
 - tidy.js for advanced array sorting
 - sounds from https://sfxr.me/
+
+I also include the following from Steven Shipway:
 
 -----------------------------------------------------------------------------
                             WANDERER CREDITS
