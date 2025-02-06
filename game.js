@@ -224,8 +224,30 @@ function preload () {
     });
 
     // sounds
-    var sounds = ['teleport','tick','diamond','landmine','arrow','killed','boulder','dirt','monsters','exit1','exit2'];
-    sounds.map(s => this.load.audio(`sound-${s}`, `sounds/${s}.wav`));
+    // var sounds = ['teleport','tick','diamond','landmine','arrow','killed','boulder','dirt','monsters','exit1','exit2'];
+    // sounds.map(s => this.load.audio(`sound-${s}`, `sounds/${s}.wav`));
+}
+
+
+function playSound(soundName) {
+    if(!sound){ return; }
+    if (sounds[soundName]) {
+        // Stop other sounds if necessary
+        for (const sound in sounds) {
+            if (sounds.hasOwnProperty(sound) && sound !== soundName) {
+                sounds[sound].pause();
+                sounds[sound].currentTime = 0;
+            }
+        }
+        
+        sounds[soundName].play().catch(error => {
+            if (error.name !== 'AbortError') {
+                console.error('Error playing sound:', error);
+            }
+        });
+    } else {
+        console.error('Sound not found:', soundName);
+    }
 }
 
 
@@ -245,7 +267,7 @@ function update () {
             queue = queue.filter((x,ind) => ![i].includes(ind)); // remove from queue
             var moved = move(q);
             if(moved){
-                if(sound && ['left arrow','right arrow'].indexOf(e[q].type) > -1) create_this.sound.play('sound-arrow');
+                if(sound && ['left arrow','right arrow'].indexOf(e[q].type) > -1) playSound('arrow');
                 break;
             }
         }
@@ -302,7 +324,7 @@ function update () {
 
         if(cursors.left.isDown || cursors.right.isDown || cursors.up.isDown || cursors.down.isDown || return_press || tap || swipeX || swipeY ) {
 
-            if(sound) create_this.sound.play('sound-tick');
+            playSound('tick');
             if(return_press || tap){
                 console.log();
                 return_press = false;

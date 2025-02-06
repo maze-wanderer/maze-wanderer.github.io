@@ -57,3 +57,18 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
         window.alert(error_msg);
     }
 }
+
+const sounds = {
+    'teleport': new Audio('./sounds/teleport.wav'),
+    'tick': new Audio('./sounds/tick.wav'),
+    'diamond': new Audio('./sounds/diamond.wav'),
+    'landmine': new Audio('./sounds/landmine.wav'),
+    'arrow': new Audio('./sounds/arrow.wav'),
+    'killed': new Audio('./sounds/killed.wav'),
+    'boulder': new Audio('./sounds/boulder.wav'),
+    'dirt': new Audio('./sounds/dirt.wav'),
+    'monsters': new Audio('./sounds/monsters.wav'),
+    'exit1': new Audio('./sounds/exit1.wav'),
+    'exit2': new Audio('./sounds/exit2.wav')
+};
+
