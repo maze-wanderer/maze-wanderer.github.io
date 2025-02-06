@@ -198,8 +198,8 @@ var config = {
         update: update
     },
     fps: {
-        target: 60,
-        min: 60,
+        target: 30,
+        min: 30,
         forceSetTimeOut: true
     },
     audio: {
