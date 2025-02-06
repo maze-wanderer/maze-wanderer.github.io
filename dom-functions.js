@@ -35,9 +35,6 @@ function message(id, msg, fun = 'killed') {
             };
             break;
 
-        case 'long press':
-            // console.log('long press');
-            break;
 
         case 'next':
             msg_fun = next_level;
@@ -59,9 +56,6 @@ function message(id, msg, fun = 'killed') {
                     case 'exit blocked':
                         hold_dead = false;
                         document.getElementById('messenger').style.display='none';
-                        break;
-                    case 'long press':
-                        reset_level();
                         break;
                     case 'next':
                         next_level();
@@ -89,9 +83,9 @@ document.onkeyup = function(event) {
             keydown = 0;
             return;
         
-        case 32: // spacebar always resets
-            reset_level();
-            return;
+        // case 32: // spacebar always resets
+        //     reset_level();
+        //     return;
 
         case 16: // return/enter - stationary move
             return_press = true;
@@ -164,7 +158,6 @@ var target = document.getElementById('game-area');
 var p = { x: undefined, y: 0 },  // pointer position
     g = { x: 0, y: 0 },          // gesture - delta position
     mouse_down = false,
-    touch_down = false,
     target = document.getElementById('game-area'),
     mouse_report = document.getElementById('mouse-report'),
     touch_report = document.getElementById('touch-report'),
@@ -183,21 +176,17 @@ function gesture(x, y){
         if(Math.abs(g.x) > Math.abs(g.y)) { swipeX = Math.sign(g.x); }
         else { swipeY = Math.sign(g.y); }
         g = {"x": 0, "y": 0 }; 
-        touch_down = false; // suppress long press event
     }
 };
 
 function end_gesture(){
     p.x = undefined;
     g = { x: 0, y: 0 };
-    touch_down = false;
 };
 
 document.body.addEventListener('mousemove',function(e){
     if(mouse_down){ gesture(e.x, e.y); }
 })
-
-document.body.addEventListener('touchstart', function(){ touch_down = true; });
 
 document.body.addEventListener('touchmove',function(e){
     var touch = e.touches[0];
@@ -206,20 +195,8 @@ document.body.addEventListener('touchmove',function(e){
 
 document.body.addEventListener('touchend', end_gesture);
 
-document.addEventListener('long-press', function(e) {
-    if(touch_down){
-        msg_fun = reset_level;
-        message('messenger', 'Reload level?', 'long press');
-    }
-});
-
-// main_div.addEventListener('click', function(e) { tap = true; });
-
 main_div.onclick = function(e) { tap = true; };
 
-// document.onclick = function(event) {
-//     console.log('click');
-// }
 
 
 function toggle_grid(){//}

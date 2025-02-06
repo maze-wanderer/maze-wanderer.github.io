@@ -1,16 +1,11 @@
 <!DOCTYPE html>
-<html data-long-press-delay="300">
+<html>
 <head>
 	<meta charset="utf-8">
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'>
 	<link rel="shortcut icon" href="wanderer.ico">
 	<script src="js/phaser.min.js"></script>
-	<script src="js/long-press-event.min.js"></script>
 	
-	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
-	<!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic"> -->
-	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"> -->
-	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css"> -->
 	<link rel="stylesheet" href="css/font-awesome.min.css">
 	<link rel="stylesheet" href="css/fonts.css">
 	<link rel="stylesheet" href="css/normalize.css">
@@ -35,7 +30,8 @@
 							<span><select id="gameLevel" style="width:80px;"></select></span> &ensp;
 							<span id="diamondsRemaining"></span> &ensp;
 							<span id="movesRemaining"></span> &ensp;
-							<span id="sound" onclick="toggle_sound()">🔇</span>
+							<span id="sound" onclick="toggle_sound()">🔇</span> &ensp;
+							<span id="restart" onclick="reset_level()">♻️</span>
 							<span id="pagetitle"> <span style="color:skyblue;">&#60;&#60;&#60;</span>W·A·N·D·E·R·E·R<span style="color:magenta;"> >>> </span>
 								<!-- <a href="wanderer-credits.txt" style="color:#ccc; font-size:0.6em;" target="_blank">(credits)</a> -->
 								<a href="./wanderer-credits.txt" style="color:#ccc; font-size:0.6em;" target="_blank">(credits)</a>

@@ -85,6 +85,6 @@ h1, h2, h3, h4, h5, h6, .button, button, dd, dt, li, p {
     padding: 0 !important;
 }
 
-#sound {
+#sound, #restart {
     cursor: pointer;
 }
