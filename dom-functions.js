@@ -136,6 +136,14 @@ function saveCookie(c_name, c_value, exdays=10000) {
 }
 
 var cookies = readCookie();
+var new_cookie = cookies['max_level'] === undefined;
+
+if(new_cookie){
+    console.log('new cookie');
+} else {
+    console.log('cookie already present');
+}
+
 var level_max, level_num;
 if(cookies.max_level === undefined){ level_max = 1; saveCookie('max_level', level_max); }
 else level_max = cookies.max_level;
