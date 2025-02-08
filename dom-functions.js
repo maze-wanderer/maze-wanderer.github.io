@@ -1,7 +1,9 @@
 
 var menu_level = document.getElementById('gameLevel');
 var menu_level_html = '';
+
 for(var i=1; i<50; i++) menu_level_html += `<option class="level-option" value="${i}">Level ${i}</option>`;
+
 menu_level.innerHTML = menu_level_html;
 
 menu_level.onchange = function(){
@@ -15,6 +17,7 @@ menu_level.onchange = function(){
 function msg_fun(){ return; }
 
 function message(id, msg, fun = 'killed') {
+    
     hold_dead = true;
     var dialogue = document.getElementById(id);
     var new_html = `<h4>${msg}</h4><h5>tap or press return..</h5>`;
@@ -47,7 +50,7 @@ function message(id, msg, fun = 'killed') {
     
     function enter(){
         document.addEventListener('keydown', function(event) {
-            if (event.keyCode === 13) {
+            if (event.key === 'Enter') {
 
                 switch(fun){
                     case 'killed':
@@ -69,31 +72,24 @@ function message(id, msg, fun = 'killed') {
 }
 
 
-
-
 document.onkeyup = function(event) {
 
-    switch(event.keyCode){
-
-        // arrow keys
-        case 37:
-        case 38:
-        case 39:
-        case 40:
+    switch (event.key) {
+        // Arrow keys
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'ArrowRight':
+        case 'ArrowDown':
             keydown = 0;
-            return;
+            break;
         
-        // case 32: // spacebar always resets
-        //     reset_level();
-        //     return;
-
-        case 16: // return/enter - stationary move
+        case ' ':     // space - stationary move
             return_press = true;
-            return;
+            break;
         
-        case 71: // g - grid
+        case 'g': // g - grid
             toggle_grid();
-            return;
+            break;
     }
 }
 
@@ -111,7 +107,10 @@ function next_level() {
     level_num++;
     reset_level()
     saveCookie('current_level', level_num);
-    if(level_num > level_max){ level_max = level_num; saveCookie('max_level', level_max); }
+    if(level_num > level_max){
+        level_max = level_num;
+        saveCookie('max_level', level_max);
+    }
 }
 
 // cookies
@@ -136,21 +135,24 @@ function saveCookie(c_name, c_value, exdays=10000) {
 }
 
 var cookies = readCookie();
-var new_cookie = cookies['max_level'] === undefined;
 
-if(new_cookie){
-    console.log('new cookie');
-} else {
-    console.log('cookie already present');
-}
+var new_cookie = cookies['current_level'] === 'undefined';
+
+if(new_cookie) document.getElementById('credits').style.color = 'yellow';
 
 var level_max, level_num;
-if(cookies.max_level === undefined){ level_max = 1; saveCookie('max_level', level_max); }
-else level_max = cookies.max_level;
-if(cookies.current_level === undefined) level_num = 1;
-else level_num = cookies.current_level;
+
+if(cookies['max_level'] === 'undefined'){
+    level_max = 1;
+    saveCookie('max_level', level_max);
+} else level_max = cookies.max_level;
+
+if(cookies['current_level'] === 'undefined') level_num = 1;
+else level_num = cookies['current_level'];
+
 menu_level.value = String(level_num);
-if(cookies.sound !== undefined) toggle_sound(set_to = cookies.sound === 'true');
+
+if(cookies['sound'] !== 'undefined') toggle_sound(set_to = cookies['sound'] === 'true');
 
 
 // swipe for mobiles
@@ -204,7 +206,6 @@ document.body.addEventListener('touchmove',function(e){
 document.body.addEventListener('touchend', end_gesture);
 
 main_div.onclick = function(e) { tap = true; };
-
 
 
 function toggle_grid(){//}
