@@ -7,7 +7,10 @@ for(var i=1; i<50; i++) menu_level_html += `<option class="level-option" value="
 menu_level.innerHTML = menu_level_html;
 
 menu_level.onchange = function(){
+    console.log('new level');
     level_num = Number(menu_level.value);
+    console.log(level_num);
+    saveCookie('current_level', level_num);
     reset_level();
 }
 
@@ -87,8 +90,15 @@ document.onkeyup = function(event) {
             return_press = true;
             break;
         
-        case 'g': // g - grid
-            toggle_grid();
+        // case 'g': // g - grid
+        //     toggle_grid();
+        //     break;
+        
+        case 'c':
+            clearAllCookies();
+            break;
+        
+        default:
             break;
     }
 }
@@ -122,6 +132,7 @@ function readCookie() {
         cookie_arg = cookie_array[i].split('=');
         cookie[cookie_arg[0].trim()] = cookie_arg[1];
     }
+    console.log(cookie)
     return cookie;
 }
 
@@ -134,25 +145,62 @@ function saveCookie(c_name, c_value, exdays=10000) {
         + "; path=/";
 }
 
+function clearAllCookies() {
+    const current_cookies = document.cookie.split(";");
+
+    for (let cookie of current_cookies) {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+    cookieAlert();
+    console.log('cleared cookies');
+}
+
+function cookieAlert(){
+    var new_cookie = Object.keys(cookies).indexOf('current_level') === -1;
+    if(new_cookie) document.getElementById('credits').style.color = 'yellow';
+}
+
+function validateCookie(key, numeric = true){
+    if(Object.keys(cookies).indexOf(key) === -1) return false;
+    if(cookies[key] === undefined) return false;
+    if(cookies[key] === 'undefined') return false;
+    if(numeric){
+        if(isNaN(cookies[key])) return false;
+        if(parseFloat(cookies[key]) < 1 || parseFloat(cookies[key]) > 49) return false;
+        return true;
+    } else {
+        return cookies[key] === true || cookies[key] === "true" || cookies[key] === false || cookies[key] === "false"
+    }
+}
+
 var cookies = readCookie();
 
-var new_cookie = cookies['current_level'] === 'undefined';
+cookieAlert(cookies);
 
-if(new_cookie) document.getElementById('credits').style.color = 'yellow';
+var level_max = 1,
+    level_num = 1;
 
-var level_max, level_num;
+if(validateCookie('current_level', numeric = true)){ // valid
+    level_num = cookies['current_level'];
+} else { // invalid
+    saveCookie('current_level', level_num);
+}
 
-if(cookies['max_level'] === 'undefined'){
-    level_max = 1;
+if(validateCookie('max_level', numeric = true)){ // valid
+    level_max = cookies['max_level'];
+} else { // invalid
     saveCookie('max_level', level_max);
-} else level_max = cookies.max_level;
+}
 
-if(cookies['current_level'] === 'undefined') level_num = 1;
-else level_num = cookies['current_level'];
+if(validateCookie('sound', numeric = false)){ // valid
+    toggle_sound(set_to = cookies['sound'] === true || cookies['sound'] === "true");
+} else { // invalid
+    saveCookie('sound', sound);
+}
 
 menu_level.value = String(level_num);
-
-if(cookies['sound'] !== 'undefined') toggle_sound(set_to = cookies['sound'] === 'true');
 
 
 // swipe for mobiles
@@ -208,32 +256,32 @@ document.body.addEventListener('touchend', end_gesture);
 main_div.onclick = function(e) { tap = true; };
 
 
-function toggle_grid(){//}
-    grid = !grid;
-    if(grid){
-        var x1, x2;
-        for(var i=1; i<=40; i++) {
-            x1 = create_this.add.text(mapX(i)-10, mapY(1)-5, i, { "size": 5, color: 'yellow' });
-            x2 = create_this.add.text(mapX(i)-10, mapY(16)-5, i, { "size": 5, color: 'yellow' });
-            grid_array.push(x1); grid_array.push(x2);
-        }
-        for(var i=1; i<=16; i++) {
-            x1 = create_this.add.text(mapX(1)-10, mapY(i)-5, i, { color: 'yellow' });
-            x2 = create_this.add.text(mapX(40)-10, mapY(i)-5, i, { color: 'yellow' });
-            grid_array.push(x1); grid_array.push(x2);
-        }
-        var game_dims = String(document.getElementById('game-panel').offsetWidth) + ' x ' +
-                        String(document.getElementById('game-panel').offsetHeight);
-        var screen_dims = String(window.innerWidth) + ' x ' + String(window.innerHeight);
-        x1 = create_this.add.text(mapX(20), mapY(10), game_dims, { color: 'yellow' });
-        x2 = create_this.add.text(mapX(20), mapY(8), screen_dims, { color: 'yellow' });
-        grid_array.push(x1); grid_array.push(x2);
-    }
-    else  {
-        grid_array.map( x => x.destroy() );
-        grid_array = [];
-    }
-}
+// function toggle_grid(){//}
+//     grid = !grid;
+//     if(grid){
+//         var x1, x2;
+//         for(var i=1; i<=40; i++) {
+//             x1 = create_this.add.text(mapX(i)-10, mapY(1)-5, i, { "size": 5, color: 'yellow' });
+//             x2 = create_this.add.text(mapX(i)-10, mapY(16)-5, i, { "size": 5, color: 'yellow' });
+//             grid_array.push(x1); grid_array.push(x2);
+//         }
+//         for(var i=1; i<=16; i++) {
+//             x1 = create_this.add.text(mapX(1)-10, mapY(i)-5, i, { color: 'yellow' });
+//             x2 = create_this.add.text(mapX(40)-10, mapY(i)-5, i, { color: 'yellow' });
+//             grid_array.push(x1); grid_array.push(x2);
+//         }
+//         var game_dims = String(document.getElementById('game-panel').offsetWidth) + ' x ' +
+//                         String(document.getElementById('game-panel').offsetHeight);
+//         var screen_dims = String(window.innerWidth) + ' x ' + String(window.innerHeight);
+//         x1 = create_this.add.text(mapX(20), mapY(10), game_dims, { color: 'yellow' });
+//         x2 = create_this.add.text(mapX(20), mapY(8), screen_dims, { color: 'yellow' });
+//         grid_array.push(x1); grid_array.push(x2);
+//     }
+//     else  {
+//         grid_array.map( x => x.destroy() );
+//         grid_array = [];
+//     }
+// }
 
 function toggle_sound(set_to = undefined){
     if(set_to === undefined){
