@@ -93,3 +93,8 @@ h1, h2, h3, h4, h5, h6, .button, button, dd, dt, li, p {
 #sound, #restart {
     cursor: pointer;
 }
+
+/* suppress vertical scroll on mobiles */
+html, body {
+    overscroll-behavior-y: contain;
+}
