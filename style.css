@@ -31,12 +31,14 @@
 
 /* div to ensure touchscreen below game area */
 #fullpage {
-    position: absolute; 
-    width: 100vw; 
-    height: 100vh; 
-    top: 0; 
-    left: 0; 
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
     background-color: #444;
+    display: flex;
+    flex-direction: column;
 }
 
 span {
@@ -94,7 +96,132 @@ h1, h2, h3, h4, h5, h6, .button, button, dd, dt, li, p {
     cursor: pointer;
 }
 
+/* Game area base styling */
+#row {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+#row:first-child {
+    /* Menu bar row */
+    flex: 0 0 auto;
+}
+
+#row:last-child {
+    /* Canvas row */
+    flex: 1 1 auto;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+#game-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+#game-area canvas {
+    display: block;
+    margin: auto;
+    width: auto;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100%;
+    aspect-ratio: 16 / 9;
+}
+
+#main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 /* suppress vertical scroll on mobiles */
 html, body {
     overscroll-behavior-y: contain;
+}
+
+/* Landscape orientation optimizations */
+@media (orientation: landscape) {
+    body, html {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    #fullpage {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    #game-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 0;
+        width: 100vw;
+        margin: 0;
+    }
+
+    /* Menu bar - full width */
+    #game-panel > .container {
+        flex-shrink: 0;
+        width: 100%;
+        padding: 0 !important;
+    }
+
+    /* Game area row inside container */
+    #game-panel > .container > #row {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        flex: 1;
+    }
+
+    #game-panel > .container > #row:nth-of-type(2) {
+        flex: 1;
+        height: auto;
+    }
+
+    #game-panel > .container > #row .column-50 {
+        flex: 1;
+        max-width: none;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+    }
+
+    #main {
+        flex: 1;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #game-area {
+        width: 100%;
+        height: 100%;
+        flex: 1;
+    }
+
+    /* Message alert positioning */
+    .alert {
+        position: fixed;
+    }
 }

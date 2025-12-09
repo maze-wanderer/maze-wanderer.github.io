@@ -2,12 +2,47 @@
 // Game setup and Phaser flow
 
 main_div = document.getElementById('game-area');
-var w = main_div.offsetWidth;
-var win_height = window.innerHeight;
-var min_ratio = (1.25 * 18) / 40;
-if(win_height/w < min_ratio) w = win_height / min_ratio;
 
-var h = 1.25 * 16 * w / 40;
+// Function to calculate game dimensions
+function calculateDimensions() {
+    var w = main_div.offsetWidth;
+    var win_height = window.innerHeight;
+    var min_ratio = (1.25 * 18) / 40;
+    if(win_height/w < min_ratio) w = win_height / min_ratio;
+    
+    var h = 1.25 * 16 * w / 40;
+    return { w: w, h: h };
+}
+
+// Calculate initial dimensions
+var dims = calculateDimensions();
+var w = dims.w;
+var h = dims.h;
+
+// Force recalculation if on mobile - layout may not be settled yet
+// In landscape mode, the game-area should have full available width
+if(window.innerHeight < window.innerWidth) {  // landscape orientation
+    // In landscape, give it time to layout
+    var originalW = w;
+    setTimeout(function() {
+        var newDims = calculateDimensions();
+        // Only update if width changed significantly (more than 10%)
+        if(Math.abs(newDims.w - originalW) / originalW > 0.1) {
+            w = newDims.w;
+            h = newDims.h;
+            cellW = w / 40;
+            cellH = h / 16;
+            scaler = w / 800;
+            msg_yoffset = h - 250;
+            root.style.setProperty('--msgYoffset', msg_yoffset + 'px');
+            // Resize the game if it exists
+            if(typeof game !== 'undefined') {
+                game.scale.resize(w, h);
+            }
+        }
+    }, 200);
+}
+
 var cellW = w / 40;
 var cellH = h / 16;
 var scaler = w / 800;
@@ -379,5 +414,20 @@ function update () {
     }
 }
 
-var game = new Phaser.Game(config, 'game-area');
-game.input.enabled = false;
+// Delay game creation to allow layout to settle
+setTimeout(function() {
+    // Recalculate dimensions - layout should be settled by now
+    var newDims = calculateDimensions();
+    w = newDims.w;
+    h = newDims.h;
+    config.width = w;
+    config.height = h;
+    cellW = w / 40;
+    cellH = h / 16;
+    scaler = w / 800;
+    msg_yoffset = h - 250;
+    root.style.setProperty('--msgYoffset', msg_yoffset + 'px');
+    
+    var game = new Phaser.Game(config, 'game-area');
+    game.input.enabled = false;
+}, 100);
