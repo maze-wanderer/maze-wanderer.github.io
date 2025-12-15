@@ -292,3 +292,24 @@ function toggle_sound(set_to = undefined){
     if(sound) document.getElementById('sound').innerText = '🔊';
     else document.getElementById('sound').innerText = '🔇';
 }
+
+
+// manage game panel height
+
+function resizeGameArea() {
+    const main = document.getElementById('main');
+    if (!main) return;
+
+    // Get actual visible height
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+    // Reduce to 85% of visible height
+    main.style.height = (vh * 0.85) + 'px';
+}
+
+// Initial resize
+window.addEventListener('load', resizeGameArea);
+
+// Resize on orientation change / viewport changes
+window.addEventListener('resize', resizeGameArea);
+window.visualViewport && window.visualViewport.addEventListener('resize', resizeGameArea);
