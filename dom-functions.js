@@ -103,6 +103,20 @@ document.onkeyup = function(event) {
     }
 }
 
+// Reset level when 'r' or 'R' is pressed
+document.addEventListener('keydown', function(event){
+    if (event.key === 'r' || event.key === 'R') {
+        reset_level();
+    }
+});
+
+// Toggle sound when 's' or 'S' is pressed
+document.addEventListener('keydown', function(event){
+    if (event.key === 's' || event.key === 'S') {
+        toggle_sound();
+    }
+});
+
 // level choice
 
 function reset_level() {
