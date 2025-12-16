@@ -1,6 +1,19 @@
                             WANDERER CREDITS
                            ==================
 
+THIS PROJECT IS NOT OPEN SOURCE. The code is made available under a custom, non-commercial, source-available licence originating with the original author, Steven Shipway.
+
+For history and licence information see https://github.com/maze-wanderer/maze-wanderer.github.io/blob/master/README.md
+
+This website is created by https://github.com/geotheory by kind permission of Steven Shipway: https://github.com/sshipway/wanderer/issues/12#issuecomment-767888570
+
+Below is his credits text - please do read it if you plan to develop this game concept further.
+
+enjoy :)
+Robin
+
+-----------------------------------------------------------------------------
+
 This file should always be available to all players of the game. Feel free to
 add anything necessary, eg, if you create some new screens, but don't *delete*
 anything! The people in here have worked hard and deserve all the fame they

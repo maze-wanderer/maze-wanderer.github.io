@@ -14,12 +14,31 @@ This is a not a port of the  original code but a complete rewrite in Javascript.
 
 I've not yet implemented proper level progression logic.  For now anyone can play any level.
 
+### Licence
+
+For full licence see https://github.com/maze-wanderer/maze-wanderer.github.io/blob/master/LICENCE.
+
+Below is a more readable interpretation of [Steve's instructions](https://github.com/sshipway/wanderer/issues/12#issuecomment-767888570):
+
+Wanderer is made available under a custom, non-commercial, source-available licence originating with the original author, Steven Shipway.
+
+You are permitted to:
+- View and modify the source code
+- Create extensions, bugfixes, and new levels
+- Redistribute the game and modified versions
+
+Provided that:
+- The original credits and attribution are preserved in full
+- The work is distributed free of charge or on a strictly non-profit basis
+- Derivative works are distributed under the same conditions
+
+Commercial use, paid distribution, or relicensing requires explicit permission from the original author.
+
 ### Links
 - https://www.steveshipway.org/software/wanderer/f_wanderer.html
 - https://github.com/sshipway/wanderer
+- https://github.com/sshipway/wanderer/issues/12#issuecomment-767888570
 
 --------------------
 
-Robin Edwards
-- [@geotheory](https://twitter.com/geotheory)
-- https://github.com/geotheory
+Robin Edwards - https://github.com/geotheory
