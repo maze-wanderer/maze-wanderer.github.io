@@ -53,20 +53,35 @@ var rows = [];
 for(var r=0;r<16;r++){ rows.push(new Array(40).fill(' ')); }
 
 var selectedKey = '@';
-// single player position (only one '@' allowed)
-var playerPos = { x: -1, y: -1 };
+// positions for elements that must be unique (only one instance allowed)
+var singlePos = {
+    'player': { x: -1, y: -1 },
+    'portal in': { x: -1, y: -1 },
+    'portal out': { x: -1, y: -1 },
+    'exit': { x: -1, y: -1 },
+    'big monster': { x: -1, y: -1 }
+};
 
 // sprite cache for preloaded images
 var spriteCache = {};
 
+// drawing state for drag-paint behavior
+var isDrawing = false;
+var lastPaintX = -1, lastPaintY = -1;
+var drawingStarted = false;
+
 function preloadSprites(callback){
-    var types = Object.values(elements).filter(t => t && t !== 'space' && t !== 'dark wall' && t !== 'light wall');
+    // exclude space and portal-out placeholders; walls now have builder SVGs we will preload
+    var types = Object.values(elements).filter(t => t && t !== 'space' && t !== 'portal out');
     // unique
     types = Array.from(new Set(types));
     var pending = types.length;
     if(pending === 0){ if(callback) callback(); return; }
     types.forEach(function(type){
-        var fname = type.replace(/\s+/g,'-');
+        var fname;
+        if(type === 'dark wall') fname = 'builder-dark-wall';
+        else if(type === 'light wall') fname = 'builder-light-wall';
+        else fname = type.replace(/\s+/g,'-');
         var img = new Image();
         img.onload = function(){ spriteCache[type] = img; if(--pending === 0 && callback) callback(); };
         img.onerror = function(){ console.warn('Designer: failed to preload', fname); spriteCache[type] = null; if(--pending === 0 && callback) callback(); };
@@ -75,7 +90,7 @@ function preloadSprites(callback){
 }
 
 var sprite_scales = {
-    'diamond': 0.43, 'add moves': 0.04, 'boulder': 0.2, 'dirt': 0.15, 'left slope': 0.18, 'right slope': 0.18, 
+    'diamond': 0.43, 'add moves': 0.04, 'boulder': 0.2, 'dirt': 0.1, 'left slope': 0.18, 'right slope': 0.18, 
     'fire': 0.3, 'portal in': 0.01, 'exit': 0.25, 'left arrow': 0.2, 'right arrow': 0.2, 'balloon': 0.4, 
     'baby monster': 0.17, 'big monster': 0.17, 'cage': 0.2, 'bomb': 0.4, 'player': 0.17, 'player left': 0.17, 
     'player right': 0.17, 'player up': 0.17, 'player down': 0.17, 'player dead': 0.17
@@ -95,10 +110,22 @@ function buildPalette(){
     var pal = document.getElementById('top-palette') || document.getElementById('palette');
     pal.innerHTML = '';
     // compute cell pixel sizes (match grid sizing logic)
-    var container = document.getElementById('game-area');
-    var contWidth = (container && container.clientWidth) ? container.clientWidth : window.innerWidth;
-    var cellWpx = Math.floor(contWidth / 40);
-    var cellHpx = Math.floor(h / 16);
+    // Prefer reading an actual cell's size if the grid exists, otherwise fall back to container width
+    var cellWpx, cellHpx;
+    var grid = document.getElementById('dom-grid');
+    if(grid){
+        var sample = grid.querySelector('.designer-cell');
+        if(sample){
+            cellWpx = Math.max(8, Math.floor(sample.clientWidth));
+            cellHpx = Math.max(8, Math.floor(sample.clientHeight));
+        }
+    }
+    if(!cellWpx || !cellHpx){
+        var container = document.getElementById('game-area');
+        var contWidth = (container && container.clientWidth) ? container.clientWidth : window.innerWidth;
+        cellWpx = Math.floor(contWidth / 40);
+        cellHpx = Math.floor(h / 16);
+    }
     paletteKeys.forEach(function(k){
         var btn = document.createElement('button');
         btn.title = elements[k] || k;
@@ -120,16 +147,48 @@ function buildPalette(){
             // show dot for empty
             btn.textContent = '\u00B7';
         } else if(type === 'dark wall' || type === 'light wall'){
-            // colored box for walls
-            var box = document.createElement('div');
-            var boxSize = Math.max(12, Math.round(Math.min(cellWpx, cellHpx) * 0.5));
-            box.style.width = boxSize + 'px';
-            box.style.height = boxSize + 'px';
-            box.style.borderRadius = '2px';
-            box.style.boxSizing = 'border-box';
-            box.style.border = '1px solid #222';
-            box.style.background = (type === 'dark wall') ? '#777' : '#888';
-            btn.appendChild(box);
+            // Use builder SVGs for wall buttons so they render consistently
+            var cachedWall = spriteCache[type];
+            var fname = (type === 'dark wall') ? 'builder-dark-wall' : 'builder-light-wall';
+            if(cachedWall){
+                var imgEl = cachedWall.cloneNode();
+                imgEl.alt = type;
+                imgEl.style.pointerEvents = 'none';
+                imgEl.style.maxWidth = 'none';
+                imgEl.style.maxHeight = 'none';
+                // size based on button pixels in next tick
+                (function(b, img){ setTimeout(function(){ var bw = b.clientWidth||34; var bh = b.clientHeight||34; var boxSize = Math.max(12, Math.floor(Math.min(bw,bh)*0.6)); img.style.width = boxSize + 'px'; img.style.height = boxSize + 'px'; },0); })(btn, imgEl);
+                btn.appendChild(imgEl);
+            } else {
+                var img = document.createElement('img');
+                img.alt = type;
+                img.src = '/sprites/' + fname + '.svg';
+                img.style.pointerEvents = 'none';
+                img.style.maxWidth = 'none';
+                img.style.maxHeight = 'none';
+                (function(b, img){ setTimeout(function(){ var bw = b.clientWidth||34; var bh = b.clientHeight||34; var boxSize = Math.max(12, Math.floor(Math.min(bw,bh)*0.6)); img.style.width = boxSize + 'px'; img.style.height = boxSize + 'px'; },0); })(btn, img);
+                btn.appendChild(img);
+            }
+        } else if(type === 'portal out'){
+            // portal-out is not a sprite; show a labeled swatch 'A' (destination marker)
+            var swatch2 = document.createElement('div');
+            swatch2.className = 'palette-swatch portal-out-swatch';
+            swatch2.style.width = '16px';
+            swatch2.style.height = '16px';
+            swatch2.style.borderRadius = '2px';
+            swatch2.style.boxSizing = 'border-box';
+            swatch2.style.border = '1px solid #333';
+            swatch2.style.background = '#3355aa';
+            swatch2.style.color = '#fff';
+            swatch2.style.display = 'inline-flex';
+            swatch2.style.alignItems = 'center';
+            swatch2.style.justifyContent = 'center';
+            swatch2.style.fontSize = Math.max(10, Math.round(cellHpx * 0.45)) + 'px';
+            swatch2.textContent = 'A';
+            swatch2.style.pointerEvents = 'none';
+            btn.appendChild(swatch2);
+            // measure and adjust
+            (function(b, s){ setTimeout(function(){ var bw = b.clientWidth||34; var bh = b.clientHeight||34; var bs = Math.max(12, Math.floor(Math.min(bw,bh)*0.6)); s.style.width=bs+'px'; s.style.height=bs+'px'; s.style.fontSize = Math.max(10, Math.round(bs*0.45))+'px'; },0); })(btn, swatch2);
         } else {
             // try to show sprite SVG from cache (preloaded)
             var cached = spriteCache[type];
@@ -140,6 +199,8 @@ function buildPalette(){
                 imgEl.style.width = dim.w + 'px';
                 imgEl.style.height = dim.h + 'px';
                 imgEl.style.pointerEvents = 'none';
+                imgEl.style.maxWidth = 'none';
+                imgEl.style.maxHeight = 'none';
                 btn.appendChild(imgEl);
             } else {
                 // fallback to creating an image (will load if not preloaded)
@@ -150,6 +211,8 @@ function buildPalette(){
                 var dim2 = spritePixelSizeForCell(type, cellWpx, cellHpx);
                 img.style.width = dim2.w + 'px';
                 img.style.height = dim2.h + 'px';
+                img.style.maxWidth = 'none';
+                img.style.maxHeight = 'none';
                 img.style.pointerEvents = 'none';
                 img.onerror = function(){ btn.textContent = k === ' ' ? '\u00B7' : k; };
                 btn.appendChild(img);
@@ -171,6 +234,9 @@ function updatePaletteSelection(){
 // DOM-based grid editor (40x16)
 function buildDomGrid(){
     var container = document.getElementById('game-area');
+    // ensure some right padding so an external sidebar won't overlap the right-hand row numbers
+    container.style.boxSizing = 'border-box';
+    container.style.paddingRight = '72px';
     container.innerHTML = '';
     // We'll create a wrapper column that contains: top numbers, middle (left numbers + grid + right numbers), bottom numbers
     var wrapperCol = document.createElement('div');
@@ -253,7 +319,8 @@ function buildDomGrid(){
     rightNums.id = 'row-right';
     rightNums.style.display = 'grid';
     rightNums.style.gridTemplateRows = 'repeat(16, ' + cellHpx + 'px)';
-    rightNums.style.marginLeft = '4px';
+    // add a slightly larger gap between the main grid and the right-hand numbers
+    rightNums.style.marginLeft = '12px';
     for(var ry=16; ry>=1; ry--){ var rn2 = document.createElement('div'); rn2.textContent = ry; rn2.style.color='#ddd'; rn2.style.display='flex'; rn2.style.alignItems='center'; rn2.style.justifyContent='center'; rightNums.appendChild(rn2); }
     middle.appendChild(rightNums);
 
@@ -292,16 +359,27 @@ function updateDomCell(x,y){
         return;
     }
 
-    // walls: draw colored background instead of sprite
-    if(type === 'dark wall'){
-        el.style.background = '#777';
-        el.textContent = '';
-        return;
-    }
-    if(type === 'light wall'){
-        el.style.background = '#888';
-        el.textContent = '';
-        return;
+    // walls: render using builder SVGs if available, otherwise fall back to a colored background
+    if(type === 'dark wall' || type === 'light wall'){
+        var cw_local = el.clientWidth || (Math.floor((document.getElementById('game-area').clientWidth||window.innerWidth)/40));
+        var ch_local = el.clientHeight || Math.floor(h / 16);
+        var cachedWall = spriteCache[type];
+        if(cachedWall){
+            var imgEl = cachedWall.cloneNode();
+            imgEl.alt = type;
+            var size = Math.round(Math.min(cw_local, ch_local) * 0.95);
+            imgEl.style.width = size + 'px';
+            imgEl.style.height = size + 'px';
+            imgEl.style.pointerEvents = 'none';
+            el.appendChild(imgEl);
+            return;
+        } else {
+            // fallback: use same colored background as before
+            if(type === 'dark wall') el.style.background = '#777';
+            else el.style.background = '#888';
+            el.textContent = '';
+            return;
+        }
     }
 
     // other types: use preloaded image if available, otherwise load by src
@@ -340,36 +418,112 @@ function updateDomGrid(){
 function setCell(x,y,key){
     // x:0..39, y:0..15 (top..bottom)
     var current = rows[y][x];
+    var selType = elements[key];
 
     // If clicking with the same selection, toggle clear the cell
     if(current === key){
         // clear cell
         rows[y][x] = ' ';
-        // if it was the player, clear playerPos
-        if(key === '@'){
-            playerPos.x = -1; playerPos.y = -1;
+        // if it was a unique element, clear its stored position
+        var curType = elements[current];
+        if(curType && singlePos[curType]){
+            singlePos[curType].x = -1;
+            singlePos[curType].y = -1;
         }
         return;
     }
 
-    // If placing player '@', remove any existing player first
-    if(key === '@'){
-        if(playerPos.x !== -1 && playerPos.y !== -1){
-            // clear previous player cell
-            rows[playerPos.y][playerPos.x] = ' ';
-            updateDomCell(playerPos.x, playerPos.y);
+    // If placing a unique element, remove any existing instance first
+    if(selType && singlePos[selType]){
+        var prev = singlePos[selType];
+        if(prev.x !== -1 && prev.y !== -1){
+            rows[prev.y][prev.x] = ' ';
+            updateDomCell(prev.x, prev.y);
         }
-        rows[y][x] = '@';
-        playerPos.x = x; playerPos.y = y;
+        rows[y][x] = key;
+        singlePos[selType].x = x;
+        singlePos[selType].y = y;
         return;
     }
 
-    // If overwriting a player with a different key, clear playerPos
-    if(current === '@'){
-        playerPos.x = -1; playerPos.y = -1;
+    // If overwriting a unique element with a different key, clear its stored position
+    var curType = elements[current];
+    if(curType && singlePos[curType]){
+        singlePos[curType].x = -1;
+        singlePos[curType].y = -1;
     }
 
     rows[y][x] = key;
+}
+
+// Convert client coordinates to grid cell indexes (returns null if outside)
+function getGridCoordsFromClient(clientX, clientY){
+    var grid = document.getElementById('dom-grid');
+    if(!grid) return null;
+    var rect = grid.getBoundingClientRect();
+    if(clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+    var cellWpx = rect.width / 40;
+    var cellHpx = rect.height / 16;
+    var x = Math.floor((clientX - rect.left) / cellWpx);
+    var y = Math.floor((clientY - rect.top) / cellHpx);
+    x = Math.max(0, Math.min(39, x));
+    y = Math.max(0, Math.min(15, y));
+    return { x: x, y: y };
+}
+
+// Paint (set) a cell without toggle behavior. Enforces uniqueness similar to setCell.
+function paintCell(x, y, key){
+    if(x < 0 || x > 39 || y < 0 || y > 15) return;
+    var current = rows[y][x];
+    // If painting same visible key, avoid redundant writes
+    if(current === key) return;
+
+    // Erase case
+    if(key === ' '){
+        var curType = elements[current];
+        if(curType && singlePos[curType]){
+            singlePos[curType].x = -1;
+            singlePos[curType].y = -1;
+        }
+        rows[y][x] = ' ';
+        updateDomCell(x, y);
+        lastPaintX = x; lastPaintY = y;
+        return;
+    }
+
+    var selType = elements[key];
+    // If placing a unique element, remove any existing instance first
+    if(selType && singlePos[selType]){
+        var prev = singlePos[selType];
+        if(prev.x !== -1 && prev.y !== -1){
+            rows[prev.y][prev.x] = ' ';
+            updateDomCell(prev.x, prev.y);
+        }
+        rows[y][x] = key;
+        singlePos[selType].x = x;
+        singlePos[selType].y = y;
+        updateDomCell(x, y);
+        lastPaintX = x; lastPaintY = y;
+        return;
+    }
+
+    // If overwriting a unique element, clear its stored position
+    var curType = elements[current];
+    if(curType && singlePos[curType]){
+        singlePos[curType].x = -1;
+        singlePos[curType].y = -1;
+    }
+
+    rows[y][x] = key;
+    updateDomCell(x, y);
+    lastPaintX = x; lastPaintY = y;
+}
+
+function paintAtClient(clientX, clientY){
+    var pt = getGridCoordsFromClient(clientX, clientY);
+    if(!pt) return;
+    if(pt.x === lastPaintX && pt.y === lastPaintY) return;
+    paintCell(pt.x, pt.y, selectedKey);
 }
 
 function clearGrid(){
@@ -401,6 +555,20 @@ function encodeForURL(){
     area.value = semi + '\n\nEncoded for URL (use as index.html#level=<encoded>):\n' + link;
 }
 
+// Save current level as a local text file (prompts user download)
+function saveLevelToFile(){
+    var out = exportLevel();
+    var filename = (document.getElementById('level-title').value || 'designer-level').replace(/[^a-z0-9_.-]/ig, '_') + '.txt';
+    var blob = new Blob([out], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); try{ document.body.removeChild(a); } catch(e){} }, 150);
+}
+
 function openInGame(){
     // export current level, encode with semicolon placeholders, and navigate to main page
     var out = exportLevel();
@@ -421,9 +589,101 @@ window.addEventListener('load', function(){
         // then build palette (which sizes images based on container width)
         buildPalette();
         updateDomGrid();
+        // If there is a site sidebar, reduce its width to half so it doesn't crowd the designer.
+        (function halveSidebar(){
+            var selectors = ['#sidebar', '.sidebar', 'aside', '.site-sidebar', '.page-sidebar'];
+            for(var i=0;i<selectors.length;i++){
+                var s = document.querySelector(selectors[i]);
+                if(!s) continue;
+                try{
+                    var cs = window.getComputedStyle(s);
+                    var w = parseFloat(cs.width) || 0;
+                    if(w <= 0) continue;
+                    var newW = Math.max(36, Math.round(w/2));
+                    s.style.width = newW + 'px';
+                    // if the designer container exists, reduce its right padding to match smaller sidebar
+                    var container = document.getElementById('game-area');
+                    if(container){ container.style.paddingRight = Math.max(12, Math.round(newW/2)) + 'px'; }
+                } catch(e){ /* ignore */ }
+                break; // apply to first matching selector only
+            }
+        })();
         document.getElementById('btn-clear').addEventListener('click', function(){ clearGrid(); });
         document.getElementById('btn-export').addEventListener('click', function(){ openInGame(); });
-        document.getElementById('btn-encode-url').addEventListener('click', function(){ encodeForURL(); });
+        // repurpose 'Encode for URL' button as a 'Save to file' download
+        var btnSave = document.getElementById('btn-encode-url');
+        if(btnSave) btnSave.addEventListener('click', function(){ saveLevelToFile(); });
+
+        // --- Draw/paint handlers (mouse + touch) ---
+        // Allow drag-painting while left mouse button is held (or touch held)
+        var gridEl = document.getElementById('dom-grid');
+        if(gridEl){
+            gridEl.addEventListener('mousedown', function(ev){
+                if(ev.button !== 0) return; // only left button
+                ev.preventDefault();
+                isDrawing = true;
+                drawingStarted = false;
+                lastPaintX = -1; lastPaintY = -1;
+                document.body.style.userSelect = 'none';
+                // do NOT paint on mousedown so the existing click handler can toggle correctly
+            });
+
+            document.addEventListener('mousemove', function(ev){
+                if(!isDrawing) return;
+                ev.preventDefault();
+                drawingStarted = true;
+                paintAtClient(ev.clientX, ev.clientY);
+            });
+
+            document.addEventListener('mouseup', function(ev){
+                if(!isDrawing) return;
+                // If user dragged (drawingStarted === true) we've already painted along the path.
+                // If drawingStarted === false, do nothing here and allow the cell's click handler
+                // to run (it implements the toggle behavior for single clicks).
+                isDrawing = false;
+                drawingStarted = false;
+                lastPaintX = -1; lastPaintY = -1;
+                try{ document.body.style.userSelect = ''; } catch(e){}
+            });
+
+            // touch support
+            gridEl.addEventListener('touchstart', function(ev){
+                if(!ev.touches || ev.touches.length === 0) return;
+                // preventDefault to avoid generating a synthetic click and to stop scrolling
+                ev.preventDefault();
+                isDrawing = true;
+                drawingStarted = false;
+                lastPaintX = -1; lastPaintY = -1;
+                document.body.style.userSelect = 'none';
+                // do NOT paint immediately; wait for touchmove so taps are handled as taps
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(ev){
+                if(!isDrawing) return;
+                if(!ev.touches || ev.touches.length === 0) return;
+                ev.preventDefault();
+                drawingStarted = true;
+                var t = ev.touches[0];
+                paintAtClient(t.clientX, t.clientY);
+            }, { passive: false });
+
+            document.addEventListener('touchend', function(ev){
+                if(!isDrawing) return;
+                // If the touch did not move (drawingStarted === false), treat this as a tap
+                // and set/toggle the touched cell. Use changedTouches[0] for coordinates.
+                if(!drawingStarted){
+                    var t = (ev.changedTouches && ev.changedTouches[0]) ? ev.changedTouches[0] : null;
+                    if(t){
+                        var pt = getGridCoordsFromClient(t.clientX, t.clientY);
+                        if(pt) { setCell(pt.x, pt.y, selectedKey); updateDomCell(pt.x, pt.y); }
+                    }
+                }
+                isDrawing = false;
+                drawingStarted = false;
+                lastPaintX = -1; lastPaintY = -1;
+                try{ document.body.style.userSelect = ''; } catch(e){}
+            });
+        }
 
         // respond to resize
         window.addEventListener('resize', function(){
@@ -465,18 +725,23 @@ window.addEventListener('load', function(){
                     for(var bi=0; bi<buttons.length; bi++){
                         var b = buttons[bi];
                         var img = b.querySelector('img');
-                        var box = b.querySelector('div');
-                        if(img){
-                            var imgSizeW = Math.max(16, Math.round(cellWpx * 0.75));
-                            var imgSizeH = Math.max(16, Math.round(cellHpx * 0.75));
-                            img.style.width = imgSizeW + 'px';
-                            img.style.height = imgSizeH + 'px';
-                        }
-                        if(box){
-                            var boxSize = Math.max(12, Math.round(Math.min(cellWpx, cellHpx) * 0.5));
-                            box.style.width = boxSize + 'px';
-                            box.style.height = boxSize + 'px';
-                        }
+                        var box = b.querySelector('.palette-swatch');
+                                if(img){
+                                    // size images using our spritePixelSizeForCell helper for parity with game
+                                    var dimr = spritePixelSizeForCell((img.alt || ''), cellWpx, cellHpx);
+                                    img.style.width = dimr.w + 'px';
+                                    img.style.height = dimr.h + 'px';
+                                    img.style.maxWidth = 'none';
+                                    img.style.maxHeight = 'none';
+                                }
+                                if(box){
+                                            // size the swatch based on the actual button pixel size so it doesn't collapse
+                                            var bw = b.clientWidth || cellWpx || 34;
+                                            var bh = b.clientHeight || cellHpx || 34;
+                                            var boxSize = Math.max(12, Math.round(Math.min(bw, bh) * 0.6));
+                                            box.style.width = boxSize + 'px';
+                                            box.style.height = boxSize + 'px';
+                                        }
                     }
                 }
             }
