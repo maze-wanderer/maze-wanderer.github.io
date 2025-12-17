@@ -146,7 +146,7 @@ function readCookie() {
         cookie_arg = cookie_array[i].split('=');
         cookie[cookie_arg[0].trim()] = cookie_arg[1];
     }
-    console.log(cookie)
+    // console.log(cookie)
     return cookie;
 }
 
@@ -267,7 +267,7 @@ document.body.addEventListener('touchmove',function(e){
 
 document.body.addEventListener('touchend', end_gesture);
 
-main_div.onclick = function(e) { tap = true; };
+// main_div.onclick = function(e) { tap = true; }; // moved to game.js
 
 
 // function toggle_grid(){//}
