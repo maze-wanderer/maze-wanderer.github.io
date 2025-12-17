@@ -2,6 +2,7 @@
 // Game setup and Phaser flow
 
 main_div = document.getElementById('game-area');
+main_div.onclick = function(e) { tap = true; };
 
 // Function to calculate game dimensions
 function calculateDimensions() {
