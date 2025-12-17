@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'>
+	
+	<link rel="shortcut icon" href="/wanderer.ico">
+	<link rel="apple-touch-icon" sizes="180x180" href="/wanderer-180.png">
+	<link rel="icon" sizes="192x192" href="/wanderer-192.png">
+	<link rel="icon" sizes="512x512" href="/wanderer-512.png">
+
+	<script src="/js/phaser.min.js"></script>
+    
+	<link rel="stylesheet" href="/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/fonts.css">
+	<link rel="stylesheet" href="/css/normalize.css">
+	<link rel="stylesheet" href="/css/milligram.css">
+
+	<link rel="stylesheet" href="/style.css">
+	<link rel="manifest" href="/manifest.json">
+	
+	<!-- designer does not load full game logic; designer.js will init a compatible canvas -->
+</head>
+<body>
+	<div id="fullpage">
+		<div id="game-panel">
+			<div class="container">
+				<div id="top-palette-row" style="padding:6px;">
+					<div id="top-palette" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+				</div>
+				<div id="row">
+					<div class="column-50" id="main">
+						<div id="game-area"></div>
+					</div>
+					<div class="column-50">
+						<div>
+							<hr>
+							<p><strong>Tools</strong></p>
+							<button id="btn-clear">Clear</button>
+							<button id="btn-export" target="_blank">Export Level</button>
+							<button id="btn-encode-url">Encode for URL (semicolons)</button>
+							<br><br>
+							<label>Title: <input id="level-title" value="New Level"></label>
+							<br>
+							<label>Moves: <input id="level-moves" value="99999"></label>
+							<br><br>
+							<textarea id="export-area" rows="10" style="width:100%"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="row">
+				<div class="column-100">
+					<div class="alert" id="messenger" onclick="msg_fun()"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- </div> -->
+	<script src="/designer/designer.js"></script>
+</body>
+</html>
