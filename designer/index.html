@@ -25,28 +25,28 @@
 	<div id="fullpage">
 		<div id="game-panel">
 			<div class="container">
-				<div id="top-palette-row" style="padding:6px;">
-					<div id="top-palette" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+				<!-- Top tools row (moved from sidebar) -->
+				<div id="top-tools-row" style="width:100%; padding: 0 6px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+					<div id="tools" style="display:flex; align-items:center; gap:10px;">
+						<button id="btn-clear" style="padding-top:0!;">Clear</button>
+						<button id="btn-export" target="_blank">Try it out</button>
+						<button id="btn-encode-url">Save level</button>
+						<label style="margin-left:12px;">Title: <input id="level-title" value="New Level" style="color: white; width:180px;"></label>
+						<label>Moves: <input id="level-moves" value="99999" style="color: white; width:80px;"></label>
+					</div>
+					<div style="flex:1"></div>
 				</div>
-				<div id="row">
-					<div class="column-50" id="main">
-						<div id="game-area"></div>
-					</div>
-					<div class="column-50">
-						<div>
-							<hr>
-							<p><strong>Tools</strong></p>
-							<button id="btn-clear">Clear</button>
-							<button id="btn-export" target="_blank">Export Level</button>
-							<button id="btn-encode-url">Encode for URL (semicolons)</button>
-							<br><br>
-							<label>Title: <input id="level-title" value="New Level"></label>
-							<br>
-							<label>Moves: <input id="level-moves" value="99999"></label>
-							<br><br>
-							<textarea id="export-area" rows="10" style="width:100%"></textarea>
-						</div>
-					</div>
+				<!-- hidden export-area kept for backward compatibility with designer.js -->
+				<textarea id="export-area" rows="2" style="display:none"></textarea>
+
+				<!-- Palette row (sprite selectors) -->
+				<div id="palette-row" style="padding:0;">
+					<div id="top-palette" style="width:100%; display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+				</div>
+
+				<!-- Main grid row: full width with padding -->
+				<div id="main-row" style="padding:6px;">
+					<div id="game-area" style="width:100%; box-sizing:border-box; padding:8px; background:transparent;"></div>
 				</div>
 			</div>
 
