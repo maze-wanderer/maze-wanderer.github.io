@@ -50,6 +50,30 @@ var msg_yoffset = h - 250;
 var root = document.querySelector(':root');
 root.style.setProperty('--msgYoffset', msg_yoffset + 'px');
 
+// Test mode: allow supplying a single level string in the URL hash
+// Example: index.html#level=<encoded-level-string>&num=0
+var test_mode = false;
+var test_level_string = null;
+(function(){
+    try {
+        var hash = window.location.hash || '';
+        if(hash.length > 1) {
+            var params = new URLSearchParams(hash.substring(1));
+            if(params.has('level')){
+                test_level_string = decodeURIComponent(params.get('level'));
+                // replace semicolon placeholders with actual newlines
+                if(test_level_string.indexOf(';') !== -1) test_level_string = test_level_string.replace(/;/g, '\n');
+                test_mode = true;
+                if(typeof level_num === 'undefined') level_num = 0;
+                if(params.has('num')) level_num = Number(params.get('num'));
+                console.log('Test mode enabled: using level from URL hash');
+            }
+        }
+    } catch (err) {
+        console.warn('Error parsing URL hash for test level:', err);
+    }
+})();
+
 // functions to map grid positions to canvas
 function mapX (x) { return (x * cellW - cellW) + (10 * scaler); }
 function mapY (y) { return (h - (y * cellH)) + (13 * scaler); }
@@ -95,8 +119,14 @@ function load_level(level_number) {
     if(create_this.children.list.length > 0) create_this.children.list = [];
     e = [];
 
-    // var data = create_this.cache.text.get(`data`);
-    var data = create_this.cache.text.get(`data${level_number}`);
+    // If test_mode is enabled and we have a level string from the URL hash,
+    // use that directly instead of retrieving from Phaser's text cache.
+    var data;
+    if(test_mode && test_level_string !== null) {
+        data = test_level_string;
+    } else {
+        data = create_this.cache.text.get(`data${level_number}`);
+    }
     level = data;
     lines = level.split('\n');
     level_title = lines[16];
@@ -243,7 +273,13 @@ var config = {
 }
 
 function preload () {
-    for(var i=0; i<=61; i++) this.load.text({ key: `data${i}`, url: `./screens/screen.${i}.txt` });
+    if(!test_mode){
+        for(var i=0; i<=61; i++) this.load.text({ key: `data${i}`, url: `./screens/screen.${i}.txt` });
+    } else {
+        // In test mode we skip bulk loading of screen files; we'll use the
+        // provided `test_level_string` directly in `load_level()`.
+        console.log('Preload: test mode - skipping bulk screen loads');
+    }
     // this.load.image('mist', 'backgrounds/mist.jpg');
 
     var sprite_scales = {
