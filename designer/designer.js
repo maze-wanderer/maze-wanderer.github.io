@@ -60,7 +60,7 @@ var testLevelData = null;
 })();
 
 function parseLevelString(levelString) {
-  var lines = levelString.trim().split('\n');
+  var lines = levelString.replace(/\r/g, '').split('\n');
   var parsedRows = [];
   var tempRows = [];
   for (var i = 0; i < 16 && i < lines.length; i++) {
@@ -72,7 +72,8 @@ function parseLevelString(levelString) {
     while (row.length < 40) row.push(' ');
     tempRows.push(row);
   }
-  parsedRows = tempRows.reverse();
+//   parsedRows = tempRows.reverse();
+  parsedRows = tempRows;
   while (parsedRows.length < 16) parsedRows.push(new Array(40).fill(' '));
   if (lines.length > 16) {
     setTimeout(function() {
