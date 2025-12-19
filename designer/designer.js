@@ -1,5 +1,6 @@
 // Minimal designer for building levels (40x16)
 // Uses same sizing logic as main `game.js` so canvas matches appearance
+// Added: URL hash level loading support
 
 var main_div = document.getElementById('game-area');
 
@@ -22,66 +23,154 @@ var scaler = w / 800;
 function mapX (x) { return (x * cellW - cellW) + (10 * scaler); }
 function mapY (y) { return (h - (y * cellH)) + (13 * scaler); }
 
-// element keys and display labels (subset and ordering)
 var paletteKeys = ["@"," ","=","#","/","\\","O","*",":","<",">","!","^","T","A","X","C","S","M","+","B"];
 var elements = {
-    "@": "player",
-    " ": "space",
-    "=": "dark wall",
-    "#": "light wall",
-    "/": "left slope",
-    "\\": "right slope",
-    "O": "boulder",
-    "*": "diamond",
-    ":": "dirt",
-    "<": "left arrow",
-    ">": "right arrow",
-    "!": "fire",
-    "^": "balloon",
-    "T": "portal in",
-    "A": "portal out",
-    "X": "exit",
-    "C": "add moves",
-    "S": "baby monster",
-    "M": "big monster",
-    "+": "cage",
-    "B": "bomb"
+    "@": "player", " ": "space", "=": "dark wall", "#": "light wall", "/": "left slope", "\\": "right slope",
+    "O": "boulder", "*": "diamond", ":": "dirt", "<": "left arrow", ">": "right arrow", "!": "fire",
+    "^": "balloon", "T": "portal in", "A": "portal out", "X": "exit", "C": "add moves",
+    "S": "baby monster", "M": "big monster", "+": "cage", "B": "bomb"
 };
+
+// ============================================================================
+// TEST MODE: Load level from URL hash parameter
+// ============================================================================
+var testMode = false;
+var testLevelData = null;
+
+(function() {
+  try {
+    var hash = window.location.hash || '';
+    if (hash.length > 1) {
+      var params = new URLSearchParams(hash.substring(1));
+      if (params.has('level')) {
+        var levelString = decodeURIComponent(params.get('level'));
+        if (levelString.indexOf(';') !== -1) {
+          levelString = levelString.replace(/;/g, '\n');
+        }
+        testLevelData = parseLevelString(levelString);
+        testMode = true;
+        console.log('Test mode enabled: level loaded from URL hash');
+      }
+    }
+  } catch (err) {
+    console.warn('Error parsing URL hash for test level:', err);
+    testMode = false;
+    testLevelData = null;
+  }
+})();
+
+function parseLevelString(levelString) {
+  var lines = levelString.trim().split('\n');
+  var parsedRows = [];
+  var tempRows = [];
+  for (var i = 0; i < 16 && i < lines.length; i++) {
+    var row = [];
+    var chars = lines[i].split('');
+    for (var j = 0; j < 40 && j < chars.length; j++) {
+    row.push(chars[j]);
+    }
+    while (row.length < 40) row.push(' ');
+    tempRows.push(row);
+  }
+  parsedRows = tempRows.reverse();
+  while (parsedRows.length < 16) parsedRows.push(new Array(40).fill(' '));
+  if (lines.length > 16) {
+    setTimeout(function() {
+      var titleEl = document.getElementById('level-title');
+      if (titleEl && lines[16]) titleEl.value = lines[16];
+    }, 100);
+  }
+  if (lines.length > 17) {
+    setTimeout(function() {
+      var movesEl = document.getElementById('level-moves');
+      if (movesEl && lines[17]) movesEl.value = lines[17];
+    }, 100);
+  }
+  return parsedRows;
+}
+
+function initializeDesignerWithTestData() {
+  if (testMode && testLevelData) {
+    loadLevelFromArray(testLevelData);
+    console.log('Designer initialized with level from URL');
+  }
+}
+
+function loadLevelFromArray(levelArray) {
+  for (var y = 0; y < 16 && y < levelArray.length; y++) {
+    for (var x = 0; x < 40 && x < levelArray[y].length; x++) {
+      rows[y][x] = levelArray[y][x];
+    }
+  }
+  rebuildSinglePosTracking();
+  updateDomGrid();
+}
+
+function rebuildSinglePosTracking() {
+  Object.keys(singlePos).forEach(function(key) {
+    singlePos[key].x = -1;
+    singlePos[key].y = -1;
+  });
+  for (var y = 0; y < 16; y++) {
+    for (var x = 0; x < 40; x++) {
+      var ch = rows[y][x];
+      var type = elements[ch];
+      if (type && singlePos[type]) {
+        singlePos[type].x = x;
+        singlePos[type].y = y;
+      }
+    }
+  }
+}
+
+function encodeGridToHash() {
+  var lines = [];
+  for (var y = 0; y < 16; y++) lines.push(rows[y].join(''));
+  var titleEl = document.getElementById('level-title');
+  var movesEl = document.getElementById('level-moves');
+  if (titleEl) lines.push(titleEl.value || 'Designer Level');
+  if (movesEl) lines.push(movesEl.value || '99999');
+  var levelString = lines.join('\n');
+  var semi = levelString.replace(/\n/g, ';');
+  return encodeURIComponent(semi);
+}
+
+function generateShareableDesignerUrl(baseUrl) {
+  if (!baseUrl) baseUrl = window.location.href.split('#')[0];
+  var encodedLevel = encodeGridToHash();
+  return baseUrl + '#level=' + encodedLevel;
+}
+
+function generateGameTestUrl(gamePageUrl) {
+  if (!gamePageUrl) {
+    gamePageUrl = window.location.origin + window.location.pathname.replace('/designer/', '/');
+  }
+  var encodedLevel = encodeGridToHash();
+  return gamePageUrl + '#level=' + encodedLevel + '&num=0';
+}
 
 // model: 2D array rows[y][x] where y = 0..15 (top..bottom), x = 0..39
 var rows = [];
 for(var r=0;r<16;r++){ rows.push(new Array(40).fill(' ')); }
 
 var selectedKey = '@';
-// positions for elements that must be unique (only one instance allowed)
 var singlePos = {
-    'player': { x: -1, y: -1 },
-    'portal in': { x: -1, y: -1 },
-    'portal out': { x: -1, y: -1 },
-    'exit': { x: -1, y: -1 },
-    'big monster': { x: -1, y: -1 }
+    'player': { x: -1, y: -1 }, 'portal in': { x: -1, y: -1 }, 'portal out': { x: -1, y: -1 },
+    'exit': { x: -1, y: -1 }, 'big monster': { x: -1, y: -1 }
 };
 
-// sprite cache for preloaded images
 var spriteCache = {};
-
-// drawing state for drag-paint behavior
 var isDrawing = false;
 var lastPaintX = -1, lastPaintY = -1;
 var drawingStarted = false;
 
 function preloadSprites(callback){
-    // exclude space and portal-out placeholders; walls now have builder SVGs we will preload
     var types = Object.values(elements).filter(t => t && t !== 'space' && t !== 'portal out');
-    // unique
     types = Array.from(new Set(types));
     var pending = types.length;
     if(pending === 0){ if(callback) callback(); return; }
     types.forEach(function(type){
-        var fname;
-        if(type === 'dark wall') fname = 'builder-dark-wall';
-        else if(type === 'light wall') fname = 'builder-light-wall';
-        else fname = type.replace(/\s+/g,'-');
+        var fname = (type === 'dark wall') ? 'builder-dark-wall' : (type === 'light wall') ? 'builder-light-wall' : type.replace(/\s+/g,'-');
         var img = new Image();
         img.onload = function(){ spriteCache[type] = img; if(--pending === 0 && callback) callback(); };
         img.onerror = function(){ console.warn('Designer: failed to preload', fname); spriteCache[type] = null; if(--pending === 0 && callback) callback(); };
@@ -92,25 +181,20 @@ function preloadSprites(callback){
 var sprite_scales = {
     'diamond': 0.43, 'add moves': 0.04, 'boulder': 0.2, 'dirt': 0.1, 'left slope': 0.18, 'right slope': 0.18, 
     'fire': 0.3, 'portal in': 0.01, 'exit': 0.25, 'left arrow': 0.2, 'right arrow': 0.2, 'balloon': 0.4, 
-    'baby monster': 0.17, 'big monster': 0.17, 'cage': 0.2, 'bomb': 0.4, 'player': 0.17, 'player left': 0.17, 
-    'player right': 0.17, 'player up': 0.17, 'player down': 0.17, 'player dead': 0.17
+    'baby monster': 0.17, 'big monster': 0.17, 'cage': 0.2, 'bomb': 0.4, 'player': 0.17
 }
 
 function spritePixelSizeForCell(type, cellWpx, cellHpx){
     var scaleHint = sprite_scales[type] || 0.2;
-    // approximate Phaser rendering: use a multiplier to map scaleHint->pixel fraction of cell height
     var approx = Math.round(4 * scaleHint * cellHpx);
     var maxDim = Math.round(Math.min(cellWpx, cellHpx) * 0.95);
     var size = Math.min(Math.max(12, approx), maxDim);
     return { w: size, h: size };
 }
 
-// build palette UI
 function buildPalette(){
     var pal = document.getElementById('top-palette') || document.getElementById('palette');
     pal.innerHTML = '';
-    // compute cell pixel sizes (match grid sizing logic)
-    // Prefer reading an actual cell's size if the grid exists, otherwise fall back to container width
     var cellWpx, cellHpx;
     var grid = document.getElementById('dom-grid');
     if(grid){
@@ -144,10 +228,8 @@ function buildPalette(){
 
         var type = elements[k];
         if(!type || type === 'space'){
-            // show dot for empty
             btn.textContent = '\u00B7';
         } else if(type === 'dark wall' || type === 'light wall'){
-            // Use builder SVGs for wall buttons so they render consistently
             var cachedWall = spriteCache[type];
             var fname = (type === 'dark wall') ? 'builder-dark-wall' : 'builder-light-wall';
             if(cachedWall){
@@ -156,7 +238,6 @@ function buildPalette(){
                 imgEl.style.pointerEvents = 'none';
                 imgEl.style.maxWidth = 'none';
                 imgEl.style.maxHeight = 'none';
-                // size based on button pixels in next tick
                 (function(b, img){ setTimeout(function(){ var bw = b.clientWidth||34; var bh = b.clientHeight||34; var boxSize = Math.max(12, Math.floor(Math.min(bw,bh)*0.6)); img.style.width = boxSize + 'px'; img.style.height = boxSize + 'px'; },0); })(btn, imgEl);
                 btn.appendChild(imgEl);
             } else {
@@ -170,7 +251,6 @@ function buildPalette(){
                 btn.appendChild(img);
             }
         } else if(type === 'portal out'){
-            // portal-out is not a sprite; show a labeled swatch 'A' (destination marker)
             var swatch2 = document.createElement('div');
             swatch2.className = 'palette-swatch portal-out-swatch';
             swatch2.style.width = '16px';
@@ -187,10 +267,8 @@ function buildPalette(){
             swatch2.textContent = 'A';
             swatch2.style.pointerEvents = 'none';
             btn.appendChild(swatch2);
-            // measure and adjust
             (function(b, s){ setTimeout(function(){ var bw = b.clientWidth||34; var bh = b.clientHeight||34; var bs = Math.max(12, Math.floor(Math.min(bw,bh)*0.6)); s.style.width=bs+'px'; s.style.height=bs+'px'; s.style.fontSize = Math.max(10, Math.round(bs*0.45))+'px'; },0); })(btn, swatch2);
         } else {
-            // try to show sprite SVG from cache (preloaded)
             var cached = spriteCache[type];
             if(cached){
                 var imgEl = cached.cloneNode();
@@ -203,7 +281,6 @@ function buildPalette(){
                 imgEl.style.maxHeight = 'none';
                 btn.appendChild(imgEl);
             } else {
-                // fallback to creating an image (will load if not preloaded)
                 var img = document.createElement('img');
                 var fname = type.replace(/\s+/g,'-');
                 img.src = '/sprites/' + fname + '.svg';
@@ -231,26 +308,21 @@ function updatePaletteSelection(){
     });
 }
 
-// DOM-based grid editor (40x16)
 function buildDomGrid(){
     var container = document.getElementById('game-area');
-    // ensure some right padding so an external sidebar won't overlap the right-hand row numbers
     container.style.boxSizing = 'border-box';
     container.style.paddingRight = '72px';
     container.innerHTML = '';
-    // We'll create a wrapper column that contains: top numbers, middle (left numbers + grid + right numbers), bottom numbers
     var wrapperCol = document.createElement('div');
     wrapperCol.style.display = 'flex';
     wrapperCol.style.flexDirection = 'column';
     wrapperCol.style.alignItems = 'center';
 
-    // compute sizes
     var contWidth = container.clientWidth || window.innerWidth;
     var cellWpx = Math.floor(contWidth / 40);
     var totalW = cellWpx * 40;
     var cellHpx = Math.floor(h / 16);
 
-    // top column numbers
     var topNums = document.createElement('div');
     topNums.id = 'col-top';
     topNums.style.display = 'grid';
@@ -263,7 +335,6 @@ function buildDomGrid(){
     for(var i=1;i<=40;i++){ var n = document.createElement('div'); n.textContent = i; n.style.color='#ddd'; n.style.fontSize='0.8em'; topNums.appendChild(n); }
     wrapperCol.appendChild(topNums);
 
-    // middle row: left numbers, grid, right numbers
     var middle = document.createElement('div');
     middle.style.display = 'flex';
     middle.style.flexDirection = 'row';
@@ -304,7 +375,6 @@ function buildDomGrid(){
             cell.style.color = '#fff';
             cell.style.background = '#111';
             cell.style.border = '1px solid #333';
-            // initial render (will be updated by updateDomGrid)
             cell.innerHTML = '';
             (function(cx,cy){
                 cell.addEventListener('click', function(){ setCell(cx,cy, selectedKey); updateDomCell(cx,cy); });
@@ -319,14 +389,12 @@ function buildDomGrid(){
     rightNums.id = 'row-right';
     rightNums.style.display = 'grid';
     rightNums.style.gridTemplateRows = 'repeat(16, ' + cellHpx + 'px)';
-    // add a slightly larger gap between the main grid and the right-hand numbers
     rightNums.style.marginLeft = '12px';
     for(var ry=16; ry>=1; ry--){ var rn2 = document.createElement('div'); rn2.textContent = ry; rn2.style.color='#ddd'; rn2.style.display='flex'; rn2.style.alignItems='center'; rn2.style.justifyContent='center'; rightNums.appendChild(rn2); }
     middle.appendChild(rightNums);
 
     wrapperCol.appendChild(middle);
 
-    // bottom column numbers
     var bottomNums = document.createElement('div');
     bottomNums.id = 'col-bottom';
     bottomNums.style.display = 'grid';
@@ -346,20 +414,16 @@ function updateDomCell(x,y){
     var el = document.getElementById('cell-' + x + '-' + y);
     if(!el) return;
     var ch = rows[y][x];
-    // clear
     el.innerHTML = '';
     el.style.background = '#111';
     el.style.border = '1px solid #333';
 
-    // determine type
     var type = elements[ch] || null;
     if(!type || type === 'space'){
-        // show dot for empty
         el.textContent = '';
         return;
     }
 
-    // walls: render using builder SVGs if available, otherwise fall back to a colored background
     if(type === 'dark wall' || type === 'light wall'){
         var cw_local = el.clientWidth || (Math.floor((document.getElementById('game-area').clientWidth||window.innerWidth)/40));
         var ch_local = el.clientHeight || Math.floor(h / 16);
@@ -374,7 +438,6 @@ function updateDomCell(x,y){
             el.appendChild(imgEl);
             return;
         } else {
-            // fallback: use same colored background as before
             if(type === 'dark wall') el.style.background = '#777';
             else el.style.background = '#888';
             el.textContent = '';
@@ -382,12 +445,9 @@ function updateDomCell(x,y){
         }
     }
 
-    // other types: use preloaded image if available, otherwise load by src
     var cached = spriteCache[type];
     var cw = el.clientWidth || (Math.floor((document.getElementById('game-area').clientWidth||window.innerWidth)/40));
     var chPx = el.clientHeight || Math.floor(h / 16);
-    var imgW = Math.max(12, Math.round(cw * 0.75));
-    var imgH = Math.max(12, Math.round(chPx * 0.75));
     if(cached){
         var imgEl = cached.cloneNode();
         imgEl.alt = type;
@@ -416,15 +476,10 @@ function updateDomGrid(){
 }
 
 function setCell(x,y,key){
-    // x:0..39, y:0..15 (top..bottom)
     var current = rows[y][x];
     var selType = elements[key];
-
-    // If clicking with the same selection, toggle clear the cell
     if(current === key){
-        // clear cell
         rows[y][x] = ' ';
-        // if it was a unique element, clear its stored position
         var curType = elements[current];
         if(curType && singlePos[curType]){
             singlePos[curType].x = -1;
@@ -432,8 +487,6 @@ function setCell(x,y,key){
         }
         return;
     }
-
-    // If placing a unique element, remove any existing instance first
     if(selType && singlePos[selType]){
         var prev = singlePos[selType];
         if(prev.x !== -1 && prev.y !== -1){
@@ -445,18 +498,14 @@ function setCell(x,y,key){
         singlePos[selType].y = y;
         return;
     }
-
-    // If overwriting a unique element with a different key, clear its stored position
     var curType = elements[current];
     if(curType && singlePos[curType]){
         singlePos[curType].x = -1;
         singlePos[curType].y = -1;
     }
-
     rows[y][x] = key;
 }
 
-// Convert client coordinates to grid cell indexes (returns null if outside)
 function getGridCoordsFromClient(clientX, clientY){
     var grid = document.getElementById('dom-grid');
     if(!grid) return null;
@@ -471,14 +520,11 @@ function getGridCoordsFromClient(clientX, clientY){
     return { x: x, y: y };
 }
 
-// Paint (set) a cell without toggle behavior. Enforces uniqueness similar to setCell.
 function paintCell(x, y, key){
     if(x < 0 || x > 39 || y < 0 || y > 15) return;
     var current = rows[y][x];
-    // If painting same visible key, avoid redundant writes
     if(current === key) return;
 
-    // Erase case
     if(key === ' '){
         var curType = elements[current];
         if(curType && singlePos[curType]){
@@ -492,7 +538,6 @@ function paintCell(x, y, key){
     }
 
     var selType = elements[key];
-    // If placing a unique element, remove any existing instance first
     if(selType && singlePos[selType]){
         var prev = singlePos[selType];
         if(prev.x !== -1 && prev.y !== -1){
@@ -507,7 +552,6 @@ function paintCell(x, y, key){
         return;
     }
 
-    // If overwriting a unique element, clear its stored position
     var curType = elements[current];
     if(curType && singlePos[curType]){
         singlePos[curType].x = -1;
@@ -532,7 +576,6 @@ function clearGrid(){
 }
 
 function exportLevel(){
-    // rows array top..bottom -> produce 16 lines each 40 chars
     var lines = rows.map(r => r.join(''));
     var title = document.getElementById('level-title').value || 'Designer Level';
     var moves = document.getElementById('level-moves').value || '99999';
@@ -545,17 +588,14 @@ function exportLevel(){
 
 function encodeForURL(){
     var out = exportLevel();
-    // replace newlines with semicolon placeholder as used by the main game's test mode
     var semi = out.replace(/\n/g, ';');
     var encoded = encodeURIComponent(semi);
     document.getElementById('export-area').value = semi;
     var link = window.location.origin + window.location.pathname.replace('/designer/','/') + '#level=' + encoded + '&num=0';
-    // show link below textarea
     var area = document.getElementById('export-area');
     area.value = semi + '\n\nEncoded for URL (use as index.html#level=<encoded>):\n' + link;
 }
 
-// Save current level as a local text file (prompts user download)
 function saveLevelToFile(){
     var out = exportLevel();
     var filename = (document.getElementById('level-title').value || 'designer-level').replace(/[^a-z0-9_.-]/ig, '_') + '.txt';
@@ -570,26 +610,50 @@ function saveLevelToFile(){
 }
 
 function openInGame(){
-    // export current level, encode with semicolon placeholders, and navigate to main page
-    var out = exportLevel();
-    var semi = out.replace(/\n/g, ';');
-    var encoded = encodeURIComponent(semi);
-    var link = window.location.origin + window.location.pathname.replace('/designer/','/') + '#level=' + encoded + '&num=0';
-    // open the main site in a new tab and remove opener for safety
-    var win = window.open(link, '_blank');
-    if(win) try { win.opener = null; } catch(e) { /* ignore */ }
+    updateCurrentTabHash();
+    var gameUrl = generateGameTestUrl();
+    var win = window.open(gameUrl, '_blank');
+    if(win) try { win.opener = null; } catch(e) { }
 }
 
-// attach DOM events
+function updateCurrentTabHash(){
+    var encodedLevel = encodeGridToHash();
+    window.location.hash = 'level=' + encodedLevel;
+}
+
+function loadLevelFromFile(){
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt';
+    input.onchange = function(e){
+        var file = e.target.files[0];
+        if(!file) return;
+        var reader = new FileReader();
+        reader.onload = function(evt){
+            try {
+                var content = evt.target.result;
+                var levelData = parseLevelString(content);
+                loadLevelFromArray(levelData);
+                console.log('Level loaded from file:', file.name);
+            } catch(err){
+                console.error('Error loading level from file:', err);
+                alert('Error loading level file: ' + err.message);
+            }
+        };
+        reader.onerror = function(){
+            alert('Error reading file');
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
 window.addEventListener('load', function(){
-    // preload sprite assets first, then build UI
     preloadSprites(function(){
-        // build the DOM grid (40x16) first so container widths are available
         buildDomGrid();
-        // then build palette (which sizes images based on container width)
         buildPalette();
+        initializeDesignerWithTestData();
         updateDomGrid();
-        // If there is a site sidebar, reduce its width to half so it doesn't crowd the designer.
         (function halveSidebar(){
             var selectors = ['#sidebar', '.sidebar', 'aside', '.site-sidebar', '.page-sidebar'];
             for(var i=0;i<selectors.length;i++){
@@ -601,31 +665,28 @@ window.addEventListener('load', function(){
                     if(w <= 0) continue;
                     var newW = Math.max(36, Math.round(w/2));
                     s.style.width = newW + 'px';
-                    // if the designer container exists, reduce its right padding to match smaller sidebar
                     var container = document.getElementById('game-area');
                     if(container){ container.style.paddingRight = Math.max(12, Math.round(newW/2)) + 'px'; }
-                } catch(e){ /* ignore */ }
-                break; // apply to first matching selector only
+                } catch(e){ }
+                break;
             }
         })();
         document.getElementById('btn-clear').addEventListener('click', function(){ clearGrid(); });
         document.getElementById('btn-export').addEventListener('click', function(){ openInGame(); });
-        // repurpose 'Encode for URL' button as a 'Save to file' download
         var btnSave = document.getElementById('btn-encode-url');
         if(btnSave) btnSave.addEventListener('click', function(){ saveLevelToFile(); });
+        var btnLoad = document.getElementById('btn-load-file');
+        if(btnLoad) btnLoad.addEventListener('click', function(){ loadLevelFromFile(); });
 
-        // --- Draw/paint handlers (mouse + touch) ---
-        // Allow drag-painting while left mouse button is held (or touch held)
         var gridEl = document.getElementById('dom-grid');
         if(gridEl){
             gridEl.addEventListener('mousedown', function(ev){
-                if(ev.button !== 0) return; // only left button
+                if(ev.button !== 0) return;
                 ev.preventDefault();
                 isDrawing = true;
                 drawingStarted = false;
                 lastPaintX = -1; lastPaintY = -1;
                 document.body.style.userSelect = 'none';
-                // do NOT paint on mousedown so the existing click handler can toggle correctly
             });
 
             document.addEventListener('mousemove', function(ev){
@@ -637,25 +698,19 @@ window.addEventListener('load', function(){
 
             document.addEventListener('mouseup', function(ev){
                 if(!isDrawing) return;
-                // If user dragged (drawingStarted === true) we've already painted along the path.
-                // If drawingStarted === false, do nothing here and allow the cell's click handler
-                // to run (it implements the toggle behavior for single clicks).
                 isDrawing = false;
                 drawingStarted = false;
                 lastPaintX = -1; lastPaintY = -1;
                 try{ document.body.style.userSelect = ''; } catch(e){}
             });
 
-            // touch support
             gridEl.addEventListener('touchstart', function(ev){
                 if(!ev.touches || ev.touches.length === 0) return;
-                // preventDefault to avoid generating a synthetic click and to stop scrolling
                 ev.preventDefault();
                 isDrawing = true;
                 drawingStarted = false;
                 lastPaintX = -1; lastPaintY = -1;
                 document.body.style.userSelect = 'none';
-                // do NOT paint immediately; wait for touchmove so taps are handled as taps
             }, { passive: false });
 
             document.addEventListener('touchmove', function(ev){
@@ -669,8 +724,6 @@ window.addEventListener('load', function(){
 
             document.addEventListener('touchend', function(ev){
                 if(!isDrawing) return;
-                // If the touch did not move (drawingStarted === false), treat this as a tap
-                // and set/toggle the touched cell. Use changedTouches[0] for coordinates.
                 if(!drawingStarted){
                     var t = (ev.changedTouches && ev.changedTouches[0]) ? ev.changedTouches[0] : null;
                     if(t){
@@ -685,16 +738,13 @@ window.addEventListener('load', function(){
             });
         }
 
-        // respond to resize
         window.addEventListener('resize', function(){
             var newDims = calculateDimensions();
             w = newDims.w; h = newDims.h;
             cellW = w/40; cellH = h/16; scaler = w/800;
-            // rebuild grid with new pixel-perfect cell size so all 40 columns fit
             var container = document.getElementById('game-area');
             var grid = document.getElementById('dom-grid');
             if(grid && container){
-                // recompute sizes
                 var contWidth = container.clientWidth || window.innerWidth;
                 var cellWpx = Math.floor(contWidth / 40);
                 var totalW = cellWpx * 40;
@@ -702,12 +752,10 @@ window.addEventListener('load', function(){
                 grid.style.gridTemplateColumns = 'repeat(40, ' + cellWpx + 'px)';
                 grid.style.width = totalW + 'px';
                 grid.style.height = (cellHpx * 16) + 'px';
-                // update top/bottom number rows
                 var topNums = document.getElementById('col-top');
                 var bottomNums = document.getElementById('col-bottom');
                 if(topNums){ topNums.style.gridTemplateColumns = 'repeat(40, ' + cellWpx + 'px)'; topNums.style.width = totalW + 'px'; topNums.style.height = Math.round(cellHpx * 0.6) + 'px'; }
                 if(bottomNums){ bottomNums.style.gridTemplateColumns = 'repeat(40, ' + cellWpx + 'px)'; bottomNums.style.width = totalW + 'px'; bottomNums.style.height = Math.round(cellHpx * 0.6) + 'px'; }
-                // update left/right number columns
                 var leftNums = document.getElementById('row-left');
                 var rightNums = document.getElementById('row-right');
                 if(leftNums) leftNums.style.gridTemplateRows = 'repeat(16, ' + cellHpx + 'px)';
@@ -718,7 +766,6 @@ window.addEventListener('load', function(){
                     cells[i].style.height = cellHpx + 'px';
                     cells[i].style.fontSize = Math.round(cellHpx * 0.6) + 'px';
                 }
-                // update palette image/button sizes to match cell scaling
                 var pal = document.getElementById('top-palette') || document.getElementById('palette');
                 if(pal){
                     var buttons = pal.getElementsByTagName('button');
@@ -726,22 +773,20 @@ window.addEventListener('load', function(){
                         var b = buttons[bi];
                         var img = b.querySelector('img');
                         var box = b.querySelector('.palette-swatch');
-                                if(img){
-                                    // size images using our spritePixelSizeForCell helper for parity with game
-                                    var dimr = spritePixelSizeForCell((img.alt || ''), cellWpx, cellHpx);
-                                    img.style.width = dimr.w + 'px';
-                                    img.style.height = dimr.h + 'px';
-                                    img.style.maxWidth = 'none';
-                                    img.style.maxHeight = 'none';
-                                }
-                                if(box){
-                                            // size the swatch based on the actual button pixel size so it doesn't collapse
-                                            var bw = b.clientWidth || cellWpx || 34;
-                                            var bh = b.clientHeight || cellHpx || 34;
-                                            var boxSize = Math.max(12, Math.round(Math.min(bw, bh) * 0.6));
-                                            box.style.width = boxSize + 'px';
-                                            box.style.height = boxSize + 'px';
-                                        }
+                        if(img){
+                            var dimr = spritePixelSizeForCell((img.alt || ''), cellWpx, cellHpx);
+                            img.style.width = dimr.w + 'px';
+                            img.style.height = dimr.h + 'px';
+                            img.style.maxWidth = 'none';
+                            img.style.maxHeight = 'none';
+                        }
+                        if(box){
+                            var bw = b.clientWidth || cellWpx || 34;
+                            var bh = b.clientHeight || cellHpx || 34;
+                            var boxSize = Math.max(12, Math.round(Math.min(bw, bh) * 0.6));
+                            box.style.width = boxSize + 'px';
+                            box.style.height = boxSize + 'px';
+                        }
                     }
                 }
             }
