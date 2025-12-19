@@ -623,6 +623,7 @@ function updateCurrentTabHash(){
 }
 
 function loadLevelFromFile(){
+    location.hash = ''; // clear hash to avoid confusion
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = '.txt';
