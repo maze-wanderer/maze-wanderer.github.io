@@ -197,6 +197,9 @@ function load_level(level_number) {
                 playerID = i;
                 break;
             
+            case 'exit':
+                exitID = i; // no break
+            
             default:
                 // all other elements have types with types matching sprite variables
                 e[i].sprite = create_this.add.image(mapX(e[i].x), mapY(e[i].y), e[i].type);
@@ -238,7 +241,10 @@ function count_move() {
     if(moves_remaining !== 99999){
         moves_remaining--;
         document.getElementById('movesRemaining').textContent = "⏳ " + moves_remaining;
-        if(moves_remaining <= 0) {
+        if(moves_remaining == 0) {
+            console.log(e[playerID].x + ',' + e[playerID].y);
+            console.log(e[exitID].x + ',' + e[exitID].y);
+            if(e[playerID].x == e[exitID].x && e[playerID].y == e[exitID].y) return;
             dead = true;
             e[playerID].sprite.setTexture('player dead');
             kill = true;

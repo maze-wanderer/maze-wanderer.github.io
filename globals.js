@@ -9,6 +9,7 @@ var cookies,             // retrieve any pre-existing cookie with detail of curr
     e,                   // main container for element and their sprites. Top level order is preserved so n == id for e[n].id
     queue,               // element triggers not actioned immediately are queued
     playerID,            // e[id].id of player sprite
+    exitID,              // e[id].id of exit sprite
     portal_out,          // {x,y} object of any teleport destination 
     sound = false,       // sounds boolean
     verbose = false,     // more reporting to console.log
