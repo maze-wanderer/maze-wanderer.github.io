@@ -13,7 +13,9 @@
 - arrows passing directly underneath boulders trip immediately (recursively)
 - prioritisation of boulder triggering remains unclear 
 - baby monsters pass through dirt presumably not intended
-- game crashes when big monsters meet bombs
+- Implement bombs. What are they supposed to do?
+- game crashes when things meet bombs
+- arrows and boulders pass though small monsters
 
 ## Style
 
