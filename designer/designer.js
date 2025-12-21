@@ -63,8 +63,8 @@ var testLevelData = null;
       var params = new URLSearchParams(hash.substring(1));
       if (params.has('level')) {
         var levelString = decodeURIComponent(params.get('level'));
-        if (levelString.indexOf(';') !== -1) {
-          levelString = levelString.replace(/;/g, '\n');
+        if (levelString.indexOf('~') !== -1) {
+          levelString = levelString.replace(/~/g, '\n');
         }
         testLevelData = parseLevelString(levelString);
         testMode = true;
@@ -151,7 +151,7 @@ function encodeGridToHash() {
   if (titleEl) lines.push(titleEl.value || 'Designer Level');
   if (movesEl) lines.push(movesEl.value || '99999');
   var levelString = lines.join('\n');
-  var semi = levelString.replace(/\n/g, ';');
+  var semi = levelString.replace(/\n/g, '~');
   return encodeURIComponent(semi);
 }
 

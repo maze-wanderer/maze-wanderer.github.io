@@ -63,10 +63,10 @@ var test_level_string = null;
             if(params.has('level')){
                 test_level_string = decodeURIComponent(params.get('level'));
                 // replace semicolon placeholders with actual newlines
-                if(test_level_string.indexOf(';') !== -1) test_level_string = test_level_string.replace(/;/g, '\n');
+                if(test_level_string.indexOf('~') !== -1) test_level_string = test_level_string.replace(/~/g, '\n');
                 test_mode = true;
                 if(typeof level_num === 'undefined') level_num = 0;
-                if(params.has('num')) level_num = Number(params.get('num'));
+                // if(params.has('num')) level_num = Number(params.get('num'));
                 console.log('Test mode enabled: using level from URL hash');
             }
         }
