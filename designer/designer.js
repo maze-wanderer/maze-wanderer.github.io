@@ -23,12 +23,31 @@ var scaler = w / 800;
 function mapX (x) { return (x * cellW - cellW) + (10 * scaler); }
 function mapY (y) { return (h - (y * cellH)) + (13 * scaler); }
 
-var paletteKeys = ["@"," ","=","#","/","\\","O","*",":","<",">","!","^","T","A","X","C","S","M","+","B"];
+var paletteKeys = ['@', ' ', '=', '#', '/', '\\', 'O', '*', ':', '<', '>',
+                   '!', '^', 'T', 'A', 'X', 'C', 'S', 'M', '+', 'B'];
+
 var elements = {
-    "@": "player", " ": "space", "=": "dark wall", "#": "light wall", "/": "left slope", "\\": "right slope",
-    "O": "boulder", "*": "diamond", ":": "dirt", "<": "left arrow", ">": "right arrow", "!": "fire",
-    "^": "balloon", "T": "portal in", "A": "portal out", "X": "exit", "C": "add moves",
-    "S": "baby monster", "M": "big monster", "+": "cage", "B": "bomb"
+    '@': 'player',
+    ' ': 'space',
+    '=': 'dark wall',
+    '#': 'light wall',
+    '/': 'left slope',
+    '\\': 'right slope',
+    'O': 'boulder', 
+    '*': 'diamond', 
+    ':': 'dirt', 
+    '<': 'left arrow', 
+    '>': 'right arrow', 
+    '!': 'fire',
+    '^': 'balloon', 
+    'T': 'portal in', 
+    'A': 'portal out', 
+    'X': 'exit', 
+    'C': 'add moves',
+    'S': 'baby monster', 
+    'M': 'big monster', 
+    '+': 'cage', 
+    'B': 'bomb'
 };
 
 // ============================================================================
@@ -136,11 +155,12 @@ function encodeGridToHash() {
   return encodeURIComponent(semi);
 }
 
-function generateShareableDesignerUrl(baseUrl) {
-  if (!baseUrl) baseUrl = window.location.href.split('#')[0];
-  var encodedLevel = encodeGridToHash();
-  return baseUrl + '#level=' + encodedLevel;
-}
+// INERT
+// function generateShareableDesignerUrl(baseUrl) {
+//   if (!baseUrl) baseUrl = window.location.href.split('#')[0];
+//   var encodedLevel = encodeGridToHash();
+//   return baseUrl + '#level=' + encodedLevel;
+// }
 
 function generateGameTestUrl(gamePageUrl) {
   if (!gamePageUrl) {
@@ -572,6 +592,7 @@ function paintAtClient(clientX, clientY){
 }
 
 function clearGrid(){
+    location.hash = ''; // clear hash to avoid confusion
     for(var y=0;y<16;y++) for(var x=0;x<40;x++) rows[y][x] = ' ';
     updateDomGrid();
 }
@@ -587,15 +608,16 @@ function exportLevel(){
     return out;
 }
 
-function encodeForURL(){
-    var out = exportLevel();
-    var semi = out.replace(/\n/g, ';');
-    var encoded = encodeURIComponent(semi);
-    document.getElementById('export-area').value = semi;
-    var link = window.location.origin + window.location.pathname.replace('/designer/','/') + '#level=' + encoded + '&num=0';
-    var area = document.getElementById('export-area');
-    area.value = semi + '\n\nEncoded for URL (use as index.html#level=<encoded>):\n' + link;
-}
+// INNERT
+// function encodeForURL(){
+//     var out = exportLevel();
+//     var semi = out.replace(/\n/g, ';');
+//     var encoded = encodeURIComponent(semi);
+//     document.getElementById('export-area').value = semi;
+//     var link = window.location.origin + window.location.pathname.replace('/designer/','/') + '#level=' + encoded + '&num=0';
+//     var area = document.getElementById('export-area');
+//     area.value = semi + '\n\nEncoded for URL (use as index.html#level=<encoded>):\n' + link;
+// }
 
 function saveLevelToFile(){
     var out = exportLevel();
