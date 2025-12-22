@@ -47,7 +47,8 @@ var elements = {
     'S': 'baby monster', 
     'M': 'big monster', 
     '+': 'cage', 
-    'B': 'bomb'
+    'B': 'bomb',
+    '~': '\n'
 };
 
 // ============================================================================
@@ -57,16 +58,50 @@ var testMode = false;
 var testLevelData = null;
 
 (function() {
+
+    var hash_to_game_map = {
+        'p': '@',
+        '.': ' ',
+        'h': '-',
+        'w': '=',
+        'l': '#',
+        'f': '/',
+        'r': '\\',
+        'o': 'O',
+        'd': '*',
+        't': ':',
+        'a': '<',
+        'e': '>',
+        'i': '!',
+        'b': '^',
+        'n': 'T',
+        'u': 'A',
+        'x': 'X',
+        'm': 'C',
+        'y': 'S',
+        'g': 'M',
+        'c': '+',
+        'q': 'B',
+        '~': '\n'
+    };
+
   try {
     var hash = window.location.hash || '';
     if (hash.length > 1) {
       var params = new URLSearchParams(hash.substring(1));
       if (params.has('level')) {
         var levelString = decodeURIComponent(params.get('level'));
-        if (levelString.indexOf('~') !== -1) {
-          levelString = levelString.replace(/~/g, '\n');
+        levelStringx = levelString;
+        var levelArray = levelString.split('');
+        
+        // decode just the grid layout chars 
+        for(i=0; i<656; i++){
+            var spritecode = hash_to_game_map[levelArray[i]];
+            levelArray[i] = spritecode;
         }
-        testLevelData = parseLevelString(levelString);
+
+        var levelStringDecoded = levelArray.join('');
+        testLevelData = parseLevelString(levelStringDecoded);
         testMode = true;
         console.log('Test mode enabled: level loaded from URL hash');
       }
@@ -143,16 +178,54 @@ function rebuildSinglePosTracking() {
   }
 }
 
-function encodeGridToHash() {
+var game_to_hash_map = {
+    '@': 'p',   // player
+    ' ': '.',   // space
+    '-': 'h',   // hard space / floor (dash-like)
+    '=': 'w',   // dark wall
+    '#': 'l',   // light wall
+    '/': 'f',   // left slope (forward slash)
+    '\\': 'r',  // right slope
+    'O': 'o',   // boulder (visual)
+    '*': 'd',   // diamond
+    ':': 't',   // dirt / terrain
+    '<': 'a',   // left arrow
+    '>': 'e',   // right arrow
+    '!': 'i',   // fire (intensity)
+    '^': 'b',   // balloon
+    'T': 'n',   // portal in (in)
+    'A': 'u',   // portal out (out)
+    'X': 'x',   // exit (visual)
+    'C': 'm',   // add moves
+    'S': 'y',   // baby monster (young)
+    'M': 'g',   // big monster (giant)
+    '+': 'c',   // cage
+    'B': 'q',   // bomb (distinct, unused)
+    '\n': '~'
+}
+
+
+function encodeGridToHash(i) {
+    // console.log('ENCODING ' + i);
   var lines = [];
   for (var y = 0; y < 16; y++) lines.push(rows[y].join(''));
   var titleEl = document.getElementById('level-title');
   var movesEl = document.getElementById('level-moves');
   if (titleEl) lines.push(titleEl.value || 'Designer Level');
   if (movesEl) lines.push(movesEl.value || '99999');
-  var levelString = lines.join('\n');
-  var semi = levelString.replace(/\n/g, '~');
-  return encodeURIComponent(semi);
+  var levelString = lines.join('\n');  
+  var levelArray = levelString.split('');
+  
+  // decode just the grid layout chars
+  for(i=0; i<656; i++){
+    var spritecode = game_to_hash_map[levelArray[i]];
+    levelArray[i] = spritecode;
+  }
+  var encodedLevelString = levelArray.join('');
+  console.log(encodedLevelString);
+
+  return encodeURIComponent(encodedLevelString);
+    // return levelString;
 }
 
 // INERT
@@ -166,8 +239,8 @@ function generateGameTestUrl(gamePageUrl) {
   if (!gamePageUrl) {
     gamePageUrl = window.location.origin + window.location.pathname.replace('/designer/', '/');
   }
-  var encodedLevel = encodeGridToHash();
-  return gamePageUrl + '#level=' + encodedLevel + '&num=0';
+  var encodedLevel = encodeGridToHash(1);
+  return gamePageUrl + '#level=' + encodedLevel; // + '&num=0';
 }
 
 // model: 2D array rows[y][x] where y = 0..15 (top..bottom), x = 0..39
@@ -640,7 +713,7 @@ function openInGame(){
 }
 
 function updateCurrentTabHash(){
-    var encodedLevel = encodeGridToHash();
+    var encodedLevel = encodeGridToHash(2);
     window.location.hash = 'level=' + encodedLevel;
 }
 

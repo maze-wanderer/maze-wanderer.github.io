@@ -3,6 +3,7 @@
 
 var cookies,             // retrieve any pre-existing cookie with detail of current and maximum levels
     create_this = 0,     // globalise the create() function's methods for level management
+    level_num = 0,       // level number
     level,               // current level
     lines,               // level's ascii definition split into lines
     level_title,         // title from ascii blob (not used)

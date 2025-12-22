@@ -55,17 +55,52 @@ root.style.setProperty('--msgYoffset', msg_yoffset + 'px');
 // Example: index.html#level=<encoded-level-string>&num=0
 var test_mode = false;
 var test_level_string = null;
+var test_level_decoded = null;
+
 (function(){
+    var hash_to_game_map = {
+        'p': '@',
+        '.': ' ',
+        'h': '-',
+        'w': '=',
+        'l': '#',
+        'f': '/',
+        'r': '\\',
+        'o': 'O',
+        'd': '*',
+        't': ':',
+        'a': '<',
+        'e': '>',
+        'i': '!',
+        'b': '^',
+        'n': 'T',
+        'u': 'A',
+        'x': 'X',
+        'm': 'C',
+        'y': 'S',
+        'g': 'M',
+        'c': '+',
+        'q': 'B',
+        '~': '\n'
+    };
+
     try {
         var hash = window.location.hash || '';
         if(hash.length > 1) {
             var params = new URLSearchParams(hash.substring(1));
             if(params.has('level')){
                 test_level_string = decodeURIComponent(params.get('level'));
-                // replace semicolon placeholders with actual newlines
-                if(test_level_string.indexOf('~') !== -1) test_level_string = test_level_string.replace(/~/g, '\n');
+                
+                test_level_array = test_level_string.split('');
+                // decode just the grid layout chars 
+                for(i=0; i<656; i++){
+                    var spritecode = hash_to_game_map[test_level_string[i]];
+                    test_level_array[i] = spritecode;
+                }
+                test_level_decoded = test_level_array.join('');
+
                 test_mode = true;
-                if(typeof level_num === 'undefined') level_num = 0;
+                // if(typeof level_num === 'undefined') level_num = 0;
                 // if(params.has('num')) level_num = Number(params.get('num'));
                 console.log('Test mode enabled: using level from URL hash');
             }
@@ -123,17 +158,18 @@ function load_level(level_number) {
     // If test_mode is enabled and we have a level string from the URL hash,
     // use that directly instead of retrieving from Phaser's text cache.
     var data;
-    if(test_mode && test_level_string !== null) {
-        data = test_level_string;
+    if(test_mode && test_level_decoded !== null) {
+        data = test_level_decoded;
     } else {
         data = create_this.cache.text.get(`data${level_number}`);
     }
     level = data;
+    console.log('load_level: ' + level);
     lines = level.split('\n');
-    level_title = lines[16];
+    level_title = lines[16]; // NEED TO FAIL-PROOF THIS 
     // document.getElementById('gameNote').textContent = level_title;
     // document.getElementById('gameLevel').textContent = 'Level: ' + level_number;
-    moves_remaining = Number(lines[17]);
+    moves_remaining = Number(lines[17]); // NEED TO FAIL-PROOF THIS 
     if(moves_remaining === 0) moves_remaining = 99999;  // 99999 denotes unlimited moves and will not count down
     document.getElementById('movesRemaining').textContent = "⏳ " + [moves_remaining, 'unlimited'][(moves_remaining === 99999)+0];
     portal_out = { "x": -1, "y": -1 }; // global
