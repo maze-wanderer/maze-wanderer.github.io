@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Golf</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #080a16; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Courier New', monospace; color: #aab0cc; }
+  canvas { display: block; border: 1px solid #1e2240; }
+  #ui { width: 1200px; display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; font-size: 12px; color: #7080aa; }
+  #controls { display: flex; gap: 20px; }
+  kbd { background: #1a1e35; border: 1px solid #2a3060; border-radius: 3px; padding: 1px 5px; font-family: inherit; font-size: 11px; color: #8090bb; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="600"></canvas>
+<div id="ui">
+  <span id="shots">Shots: 0</span>
+  <div id="controls">
+    <span><kbd>↑↓</kbd> Angle</span>
+    <span><kbd>←→</kbd> Power</span>
+    <span><kbd>Space</kbd> Launch</span>
+    <span><kbd>R</kbd> Retry</span>
+    <span><kbd>N</kbd> New level</span>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 600;
+
+const G = 2;
+const HOLE_X = 1140, HOLE_Y = H / 2, HOLE_R = 18;
+const LAUNCHER_X = 40;
+const NUM_PLANETS = 3;
+const MIN_POWER = 50, MAX_POWER = 700;
+
+let state, planets, pos, vel, trail, angle, power, shots, stars;
+
+function rng(seed) {
+  let s = seed;
+  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+
+function genStars() {
+  const r = rng(42);
+  stars = Array.from({length: 120}, () => [r() * W, r() * H, r() > 0.85 ? 1.5 : 1]);
+}
+
+function genPlanets() {
+  const ps = [];
+  let attempts = 0;
+  while (ps.length < NUM_PLANETS && attempts < 1000) {
+    attempts++;
+    const r = 20 + Math.random() * 35 | 0;
+    const x = 180 + r + Math.random() * (980 - 180 - r * 2) | 0;
+    const y = r + 20 + Math.random() * (H - r * 2 - 40) | 0;
+    const mass = r * r * 1.2;
+    if (Math.hypot(x - LAUNCHER_X, y - H / 2) < 120) continue;
+    if (Math.hypot(x - HOLE_X, y - HOLE_Y) < r + HOLE_R + 30) continue;
+    if (ps.some(p => Math.hypot(x - p.x, y - p.y) < r + p.r + 15)) continue;
+    ps.push({x, y, r, mass});
+  }
+  return ps;
+}
+
+function resetShip() {
+  pos = {x: LAUNCHER_X, y: H / 2};
+  vel = {x: 0, y: 0};
+  trail = [];
+}
+
+function newLevel() {
+  planets = genPlanets();
+  resetShip();
+  state = 'aim';
+}
+
+function init() {
+  angle = 0;
+  power = 300;
+  shots = 0;
+  genStars();
+  newLevel();
+}
+
+// ── physics ──────────────────────────────────────────────────────────────────
+
+function step() {
+  let ax = 0, ay = 0;
+  for (const p of planets) {
+    const dx = p.x - pos.x, dy = p.y - pos.y;
+    const d2 = dx * dx + dy * dy;
+    const d = Math.sqrt(d2);
+    if (d < 1) continue;
+    const a = G * p.mass / d2;
+    ax += a * dx / d;
+    ay += a * dy / d;
+  }
+  vel.x += ax; vel.y += ay;
+  pos.x += vel.x; pos.y += vel.y;
+
+  trail.push({x: pos.x, y: pos.y});
+  if (trail.length > 220) trail.shift();
+
+  if (pos.x < 0 || pos.x > W || pos.y < 0 || pos.y > H) { state = 'crashed'; return; }
+  for (const p of planets) {
+    if (Math.hypot(pos.x - p.x, pos.y - p.y) < p.r + 5) { state = 'crashed'; return; }
+  }
+  if (Math.hypot(pos.x - HOLE_X, pos.y - HOLE_Y) < HOLE_R) { state = 'won'; }
+}
+
+// ── drawing ──────────────────────────────────────────────────────────────────
+
+function draw() {
+  ctx.fillStyle = '#080a16';
+  ctx.fillRect(0, 0, W, H);
+
+  // stars
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  for (const [sx, sy, sr] of stars) {
+    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+  }
+
+  drawHole();
+  drawPlanets();
+  drawTrail();
+
+  if (state === 'aim') {
+    drawLauncher();
+    drawGuide();
+  }
+
+  drawShip();
+
+  if (state === 'crashed') drawOverlay('CRASHED', '#e03050', 'Press R to retry  |  N for new level');
+  if (state === 'won')     drawOverlay(`IN THE HOLE  —  Shots: ${shots}`, '#40e090', 'Press N for next level');
+
+  document.getElementById('shots').textContent = `Shots: ${shots}`;
+  requestAnimationFrame(loop);
+}
+
+function loop() {
+  if (state === 'flying') step();
+  draw();
+}
+
+function drawHole() {
+  for (let i = 4; i > 0; i--) {
+    ctx.beginPath();
+    ctx.arc(HOLE_X, HOLE_Y, HOLE_R + i * 7, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(50,220,130,${0.06 * i})`;
+    ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(HOLE_X, HOLE_Y, HOLE_R, 0, Math.PI * 2);
+  ctx.fillStyle = '#20e870'; ctx.fill();
+  ctx.beginPath(); ctx.arc(HOLE_X, HOLE_Y, HOLE_R * 0.55, 0, Math.PI * 2);
+  ctx.fillStyle = '#080a16'; ctx.fill();
+  ctx.fillStyle = 'rgba(60,220,130,0.7)';
+  ctx.font = '11px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('HOLE', HOLE_X, HOLE_Y - HOLE_R - 6);
+}
+
+function drawPlanets() {
+  for (const p of planets) {
+    for (let i = 3; i > 0; i--) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r + i * 8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,170,30,${0.06 * i})`;
+      ctx.fill();
+    }
+    const gr = ctx.createRadialGradient(p.x - p.r * 0.3, p.y - p.r * 0.3, p.r * 0.1, p.x, p.y, p.r);
+    gr.addColorStop(0, '#f0c060');
+    gr.addColorStop(1, '#8a4a10');
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = gr; ctx.fill();
+  }
+}
+
+function drawTrail() {
+  const n = trail.length;
+  for (let i = 0; i < n; i++) {
+    const t = trail[i];
+    const alpha = (i / n) * 0.65;
+    const sz = (i / n) * 3;
+    ctx.beginPath(); ctx.arc(t.x, t.y, Math.max(sz, 0.5), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(70,130,255,${alpha})`; ctx.fill();
+  }
+}
+
+function drawLauncher() {
+  const lx = LAUNCHER_X, ly = H / 2;
+  const tx = lx + Math.cos(angle) * 30;
+  const ty = ly + Math.sin(angle) * 30;
+
+  // power bar
+  const bw = 12, bh = 100, bx = 6, by = ly - bh / 2;
+  ctx.fillStyle = '#111428';
+  ctx.fillRect(bx, by, bw, bh);
+  const fh = bh * (power - MIN_POWER) / (MAX_POWER - MIN_POWER);
+  const t = (power - MIN_POWER) / (MAX_POWER - MIN_POWER);
+  const pr = (80 + t * 175) | 0, pg = (220 - t * 160) | 0;
+  ctx.fillStyle = `rgb(${pr},${pg},50)`;
+  ctx.fillRect(bx, by + bh - fh, bw, fh);
+
+  ctx.fillStyle = 'rgba(150,180,255,0.7)'; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(`PWR ${power | 0}`, bx + bw + 4, by + 12);
+  ctx.fillText(`ANG ${(angle * 180 / Math.PI) | 0}°`, bx + bw + 4, by + 24);
+
+  // barrel
+  ctx.strokeStyle = '#90b8f0'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI * 2);
+  ctx.fillStyle = '#6080d0'; ctx.fill();
+}
+
+function drawGuide() {
+  const speed = power / 60;
+  const gx = Math.cos(angle) * speed, gy = Math.sin(angle) * speed;
+  ctx.strokeStyle = 'rgba(100,150,255,0.35)'; ctx.lineWidth = 1;
+  for (let i = 1; i <= 25; i++) {
+    const nx = LAUNCHER_X + gx * i * 4, ny = H / 2 + gy * i * 4;
+    if (nx < 0 || nx > W || ny < 0 || ny > H) break;
+    ctx.beginPath(); ctx.arc(nx, ny, 1.5, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+function drawShip() {
+  if (state === 'crashed') {
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      ctx.beginPath(); ctx.arc(pos.x + Math.cos(a) * 13, pos.y + Math.sin(a) * 13, 4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,${80 + Math.random() * 120 | 0},0,0.75)`; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4020'; ctx.fill();
+    return;
+  }
+  ctx.beginPath(); ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#4090ff'; ctx.fill();
+  if (state === 'flying') {
+    const spd = Math.hypot(vel.x, vel.y);
+    if (spd > 0.01) {
+      ctx.beginPath(); ctx.arc(pos.x + vel.x / spd * 11, pos.y + vel.y / spd * 11, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#b0d8ff'; ctx.fill();
+    }
+  }
+}
+
+function drawOverlay(title, col, sub) {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = col; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(title, W / 2, H / 2 - 16);
+  ctx.fillStyle = 'rgba(180,200,255,0.8)'; ctx.font = '15px monospace';
+  ctx.fillText(sub, W / 2, H / 2 + 22);
+  ctx.textAlign = 'left';
+}
+
+// ── input ────────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (state === 'aim') {
+      const speed = power / 60;
+      vel.x = Math.cos(angle) * speed;
+      vel.y = Math.sin(angle) * speed;
+      state = 'flying';
+      shots++;
+    }
+    return;
+  }
+  if (e.key === 'r' || e.key === 'R') { resetShip(); state = 'aim'; return; }
+  if (e.key === 'n' || e.key === 'N') { shots = 0; newLevel(); return; }
+  if (state !== 'aim') return;
+  if (e.key === 'ArrowUp')    { e.preventDefault(); angle -= Math.PI / 60; }
+  if (e.key === 'ArrowDown')  { e.preventDefault(); angle += Math.PI / 60; }
+  if (e.key === 'ArrowRight') { e.preventDefault(); power = Math.min(MAX_POWER, power + 20); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); power = Math.max(MIN_POWER, power - 20); }
+});
+
+init();
+loop();
+</script>
+</body>
+</html>
