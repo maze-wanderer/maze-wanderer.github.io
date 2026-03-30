@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Golf</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #040610; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Courier New', monospace; }
+canvas { display: block; }
+#hud { width: 1200px; display: flex; justify-content: space-between; padding: 6px 2px; font-size: 12px; color: #606880; }
+kbd { background: #111428; border: 1px solid #222850; border-radius: 3px; padding: 1px 5px; font-family: inherit; font-size: 11px; color: #7080aa; }
+#keys { display: flex; gap: 18px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="600"></canvas>
+<div id="hud">
+  <span id="shots">Shots: 0</span>
+  <div id="keys">
+    <span><kbd>←→</kbd> Angle</span>
+    <span><kbd>↑↓</kbd> Power</span>
+    <span><kbd>Space</kbd> Launch</span>
+    <span><kbd>R</kbd> Retry</span>
+    <span><kbd>N</kbd> New level</span>
+  </div>
+</div>
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = 1200, H = 600;
+
+const G = 1;
+const HOLE_X = 1140, HOLE_Y = H / 2, HOLE_R = 18;
+const LX = 40;
+const NUM_PLANETS = 4;
+const MIN_PWR = 0, MAX_PWR = 300;
+
+let state, planets, pos, vel, trail, angle, power, shots, stars;
+
+function genStars() {
+  let s = 42;
+  const rand = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+  stars = Array.from({length: 120}, () => [rand() * W, rand() * H]);
+}
+
+function genPlanets() {
+  const ps = [];
+  let tries = 0;
+  while (ps.length < NUM_PLANETS && tries++ < 1000) {
+    const r  = 20 + Math.random() * 35 | 0;
+    const x  = 180 + r + Math.random() * (980 - 180 - r * 2) | 0;
+    const y  = r + 20 + Math.random() * (H - r * 2 - 40) | 0;
+    const mass = r * r * 1.2;
+    if (Math.hypot(x - LX, y - H/2) < 120) continue;
+    if (Math.hypot(x - HOLE_X, y - HOLE_Y) < r + HOLE_R + 30) continue;
+    if (ps.some(p => Math.hypot(x - p.x, y - p.y) < r + p.r + 15)) continue;
+    ps.push({x, y, r, mass});
+  }
+  return ps;
+}
+
+function resetShip() {
+  pos = {x: LX, y: H / 2};
+  vel = {x: 0, y: 0};
+  trail = [];
+}
+
+function newLevel() {
+  genStars();
+  planets = genPlanets();
+  resetShip();
+  state = 'aim';
+}
+
+function init() {
+  angle = 0; power = 150; shots = 0;
+  newLevel();
+}
+
+function reflectPos(x, y) {
+  if (x < 0)      x = -x;
+  else if (x > W) x = 2 * W - x;
+  if (y < 0)      y = -y;
+  else if (y > H) y = 2 * H - y;
+  return [x, y];
+}
+
+const offscreen = () => pos.x < 0 || pos.x > W || pos.y < 0 || pos.y > H;
+
+function step() {
+  let ax = 0, ay = 0;
+  for (const p of planets) {
+    const dx = p.x - pos.x, dy = p.y - pos.y;
+    const d2 = dx*dx + dy*dy, d = Math.sqrt(d2);
+    if (d < 1) continue;
+    const a = G * p.mass / d2;
+    ax += a * dx / d; ay += a * dy / d;
+  }
+  vel.x += ax; vel.y += ay;
+  pos.x += vel.x; pos.y += vel.y;
+
+  trail.push({x: pos.x, y: pos.y});
+  if (trail.length > 200) trail.shift();
+
+  const ox = Math.max(0, -pos.x, pos.x - W);
+  const oy = Math.max(0, -pos.y, pos.y - H);
+  if (ox > H || oy > H) { state = 'lost'; return; }
+
+  for (const p of planets) {
+    if (Math.hypot(pos.x - p.x, pos.y - p.y) < p.r + 6) { state = 'crashed'; return; }
+  }
+  if (Math.hypot(pos.x - HOLE_X, pos.y - HOLE_Y) < HOLE_R) { state = 'won'; }
+}
+
+function drawStars() {
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  for (const [sx, sy] of stars) {
+    ctx.beginPath(); ctx.arc(sx, sy, 1, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawHole() {
+  for (let i = 4; i > 0; i--) {
+    ctx.beginPath(); ctx.arc(HOLE_X, HOLE_Y, HOLE_R + i*7, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(50,220,130,${0.06*i})`; ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(HOLE_X, HOLE_Y, HOLE_R, 0, Math.PI*2);
+  ctx.fillStyle = '#10f078'; ctx.fill();
+  ctx.beginPath(); ctx.arc(HOLE_X, HOLE_Y, HOLE_R * 0.55, 0, Math.PI*2);
+  ctx.fillStyle = '#080a16'; ctx.fill();
+  ctx.fillStyle = 'rgba(60,220,130,0.7)';
+  ctx.font = '11px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('HOLE', HOLE_X, HOLE_Y - HOLE_R - 6);
+}
+
+function drawPlanets() {
+  for (const p of planets) {
+    for (let i = 3; i > 0; i--) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + i*8, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,170,30,${0.06*i})`; ctx.fill();
+    }
+    const gr = ctx.createRadialGradient(p.x - p.r*0.3, p.y - p.r*0.3, p.r*0.1, p.x, p.y, p.r);
+    gr.addColorStop(0, '#f0c060'); gr.addColorStop(1, '#8a4a10');
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = gr; ctx.fill();
+  }
+}
+
+function drawTrail() {
+  const n = Math.max(trail.length, 1);
+  for (let i = 0; i < trail.length; i++) {
+    const {x: tx, y: ty} = trail[i];
+    const alpha = (i / n) * 0.7;
+    const sz = Math.max((i / n) * 3, 0.5);
+    const [rx, ry] = reflectPos(tx, ty);
+    const on = tx >= 0 && tx <= W && ty >= 0 && ty <= H;
+    ctx.beginPath(); ctx.arc(rx, ry, sz, 0, Math.PI*2);
+    ctx.fillStyle = on ? `rgba(80,140,255,${alpha})` : `rgba(120,120,140,${alpha*0.5})`;
+    ctx.fill();
+  }
+}
+
+function drawLauncher() {
+  const ly = H / 2;
+  const bw = 12, bh = 100, bx = 6, by = ly - bh/2;
+  ctx.fillStyle = '#111428'; ctx.fillRect(bx, by, bw, bh);
+  const t = (power - MIN_PWR) / (MAX_PWR - MIN_PWR);
+  const fh = bh * t;
+  const pr = (80 + t*175)|0, pg = (220 - t*160)|0;
+  ctx.fillStyle = `rgb(${pr},${pg},50)`;
+  ctx.fillRect(bx, by + bh - fh, bw, fh);
+  ctx.fillStyle = 'rgba(150,180,255,0.7)';
+  ctx.font = '10px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(`PWR ${power|0}`, bx + bw + 4, by + 12);
+  ctx.fillText(`ANG ${(angle * 180 / Math.PI)|0}°`, bx + bw + 4, by + 24);
+  const tx2 = LX + Math.cos(angle)*30, ty2 = ly + Math.sin(angle)*30;
+  ctx.strokeStyle = '#90b8f0'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(LX, ly); ctx.lineTo(tx2, ty2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(LX, ly, 9, 0, Math.PI*2);
+  ctx.fillStyle = '#6080d0'; ctx.fill();
+}
+
+function drawGuide() {
+  const spd = power / 60;
+  const gx = Math.cos(angle)*spd, gy = Math.sin(angle)*spd;
+  ctx.strokeStyle = 'rgba(100,150,255,0.35)'; ctx.lineWidth = 1;
+  for (let i = 1; i <= 25; i++) {
+    const nx = LX + gx*i*4, ny = H/2 + gy*i*4;
+    if (nx < 0 || nx > W || ny < 0 || ny > H) break;
+    ctx.beginPath(); ctx.arc(nx, ny, 1.5, 0, Math.PI*2); ctx.stroke();
+  }
+}
+
+function drawShip() {
+  if (state === 'crashed' || state === 'lost') {
+    const [ex, ey] = reflectPos(pos.x, pos.y);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      ctx.beginPath(); ctx.arc(ex + Math.cos(a)*13, ey + Math.sin(a)*13, 4, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,${80 + Math.random()*120|0},0,0.75)`; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(ex, ey, 7, 0, Math.PI*2);
+    ctx.fillStyle = '#ff4020'; ctx.fill();
+    return;
+  }
+  if (offscreen()) {
+    const [rx, ry] = reflectPos(pos.x, pos.y);
+    ctx.beginPath(); ctx.arc(rx, ry, 8, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(140,140,160,0.65)'; ctx.fill();
+    const spd = Math.hypot(vel.x, vel.y);
+    if (spd > 0.01) {
+      const gvx = (pos.x >= 0 && pos.x <= W) ? vel.x : -vel.x;
+      const gvy = (pos.y >= 0 && pos.y <= H) ? vel.y : -vel.y;
+      ctx.beginPath(); ctx.arc(rx + gvx/spd*11, ry + gvy/spd*11, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(180,180,200,0.5)'; ctx.fill();
+    }
+  } else {
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, 8, 0, Math.PI*2);
+    ctx.fillStyle = '#4090ff'; ctx.fill();
+    if (state === 'flying') {
+      const spd = Math.hypot(vel.x, vel.y);
+      if (spd > 0.01) {
+        ctx.beginPath(); ctx.arc(pos.x + vel.x/spd*11, pos.y + vel.y/spd*11, 3.5, 0, Math.PI*2);
+        ctx.fillStyle = '#b0d8ff'; ctx.fill();
+      }
+    }
+  }
+}
+
+function drawOverlay(title, col, sub) {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = col; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(title, W/2, H/2 - 16);
+  ctx.fillStyle = 'rgba(180,200,255,0.8)'; ctx.font = '15px monospace';
+  ctx.fillText(sub, W/2, H/2 + 22);
+}
+
+function loop() {
+  ctx.fillStyle = '#080a16'; ctx.fillRect(0, 0, W, H);
+  drawStars();
+  drawHole();
+  drawPlanets();
+  drawTrail();
+  if (state === 'aim')    { drawLauncher(); drawGuide(); }
+  if (state === 'flying') step();
+  drawShip();
+  document.getElementById('shots').textContent = `Shots: ${shots}`;
+  if (state === 'crashed') drawOverlay('CRASHED', '#e03050', 'R — retry   N — new level');
+  else if (state === 'lost') drawOverlay('LOST IN SPACE', '#e03050', 'R — retry   N — new level');
+  else if (state === 'won')  drawOverlay(`IN THE HOLE  —  Shots: ${shots}`, '#40e090', 'N — next level');
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  if (e.key === ' ' && state === 'aim') {
+    const spd = power / 60;
+    vel.x = Math.cos(angle) * spd;
+    vel.y = Math.sin(angle) * spd;
+    state = 'flying'; shots++;
+    return;
+  }
+  if (e.key === 'r' || e.key === 'R') { resetShip(); state = 'aim'; return; }
+  if (e.key === 'n' || e.key === 'N') { shots = 0; newLevel(); return; }
+  if (state !== 'aim') return;
+  if (e.key === 'ArrowLeft')  angle -= Math.PI / 180;
+  if (e.key === 'ArrowRight') angle += Math.PI / 180;
+  if (e.key === 'ArrowUp')    power = Math.min(MAX_PWR, power + 10);
+  if (e.key === 'ArrowDown')  power = Math.max(MIN_PWR, power - 10);
+});
+
+init();
+loop();
+</script>
+</body>
+</html>
